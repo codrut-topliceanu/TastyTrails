@@ -9,32 +9,34 @@ import com.example.tastytrails.main.domain.Recipe
 
 fun RecipeDto.toRecipeEntity(): RecipeEntity =
     RecipeEntity(
-        id = id,
-        title = title,
+        id = id ?: 0,
+        title = title ?: "",
         imageUrl = image,
-        summary = summary,
+        summary = summary ?: "",
         healthScore = healthScore,
-        spoonSourceUrl = spoonacularSourceUrl,
-        instructions = getStepInstructions(analyzedInstructions),
-        ingredients = getIngredients(extendedIngredients)
+        spoonSourceUrl = spoonacularSourceUrl ?: sourceUrl ?: "",
+        instructions = getStepInstructions(analyzedInstructions) ?: listOf(),
+        ingredients = getIngredients(extendedIngredients) ?: listOf()
     )
 
 fun RecipeDto.toRecipe(): Recipe =
     Recipe(
-        id = id,
-        title = title,
+        id = id ?: 0,
+        title = title ?: "",
         imageUrl = image,
-        summary = summary,
+        summary = summary ?: "",
         healthScore = healthScore,
-        spoonSourceUrl = spoonacularSourceUrl,
-        instructions = getStepInstructions(analyzedInstructions),
-        ingredients = getIngredients(extendedIngredients)
+        spoonSourceUrl = spoonacularSourceUrl ?: sourceUrl ?: "",
+        instructions = getStepInstructions(analyzedInstructions) ?: listOf(),
+        ingredients = getIngredients(extendedIngredients) ?: listOf()
     )
 
 fun RecipeEntity.toRecipe(): Recipe =
     Recipe(
         id = id,
         title = title,
+        previouslyViewed = previouslyViewed,
+        favorite = favorite,
         imageUrl = imageUrl,
         summary = summary,
         healthScore = healthScore,
@@ -43,12 +45,26 @@ fun RecipeEntity.toRecipe(): Recipe =
         ingredients = ingredients
     )
 
-private fun getStepInstructions(analyzedInstructions: List<AnalyzedInstruction>): List<String> =
-    analyzedInstructions.first().steps.map { step ->
-        step.step
+fun Recipe.toRecipeEntity(): RecipeEntity =
+    RecipeEntity(
+        id = id,
+        title = title,
+        previouslyViewed = previouslyViewed,
+        favorite = favorite,
+        imageUrl = imageUrl,
+        summary = summary,
+        healthScore = healthScore,
+        spoonSourceUrl = spoonSourceUrl,
+        instructions = instructions,
+        ingredients = ingredients
+    )
+
+private fun getStepInstructions(analyzedInstructions: List<AnalyzedInstruction>?): List<String>? =
+    analyzedInstructions?.first()?.steps?.map { step ->
+        step.step ?: ""
     }
 
-private fun getIngredients(extendedIngredients: List<ExtendedIngredient>): List<String> =
-    extendedIngredients.map { extendedIngredient ->
-        extendedIngredient.original
+private fun getIngredients(extendedIngredients: List<ExtendedIngredient>?): List<String>? =
+    extendedIngredients?.map { extendedIngredient ->
+        extendedIngredient.original ?: ""
     }

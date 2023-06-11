@@ -2,12 +2,20 @@
     <string name="app_name">Tasty Trails</string>
     <string name="previously_viewed_label">Previously Viewed</string>
     <string name="cd_filter_button">Filter button</string>
+    <string name="cd_back_button">Back button</string>
     <string name="cd_checked">Checked</string>
+    <string name="sort_by_a_z">A-Z</string>
+    <string name="sort_by_z_a">Z-A</string>
+    <string name="sort_by_health_score">Health Score</string>
     <string name="dish_name_examples">pasta, burgers, meatballs…</string>
     <string name="ingredients_examples">tomatoes, flour, onion…</string>
     <string name="cd_search_button">Search button</string>
     <string name="search_by_name">Search by name</string>
     <string name="search_by_ingredients">Search by ingredients</string>
     <string name="cd_image_of_recipe">Image of recipe</string>
+    <string name="filter_by">Filter by:</string>
+    <string name="header_results">Results:</string>
+    <string name="header_previously_viewed">Previously viewed:</string>
+    <string name="header_favorites">Favorites:</string>
 
 </resources>
