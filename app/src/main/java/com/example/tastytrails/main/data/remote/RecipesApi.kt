@@ -1,0 +1,46 @@
+package com.example.tastytrails.main.data.remote
+
+import com.example.tastytrails.BuildConfig
+import retrofit2.Response
+import retrofit2.http.GET
+import retrofit2.http.Path
+import retrofit2.http.Query
+
+interface RecipesApi {
+
+    /*
+    Terms of Service:
+    You may cache user-requested data to improve performance (for a maximum of 1 hour).
+    After 1 hour, you must delete your cache and refresh the data via the spoonacular API.
+    If you stop using the spoonacular API or if your access to the API is suspended for any reason,
+    then you must delete all data you ever obtained from the spoonacular API.
+    */
+
+    // todo git ignore apikey.properties
+
+    @GET("complexSearch") // todo can be used with ingredients search
+    suspend fun getRecipesByName(
+        @Query("query") recipeName: String,
+        @Query("number") resultsNumber: Int = 5,
+        @Query("includeIngredients") includeIngredients: String = "", // test this
+        @Query("fillIngredients") fillIngredients: Boolean = false,
+        @Query("addRecipeInformation") addRecipeInformation: Boolean = false,
+        @Query("ignorePantry") ignorePantry: Boolean = true,
+        @Query("apiKey") apiKey: String = BuildConfig.SPOON_API_KEY
+    ): Response<RecipeResponse>
+
+//    @GET("findByIngredients")
+//    suspend fun getRecipesByIngredients(
+//        @Query("ingredients") ingredients: String,
+//        @Query("number") resultsNumber: Int = 5
+//    )
+
+//    @GET("{id}/information")
+//    suspend fun getRecipeInformation(
+//        @Path("id") recipeId: Int
+//    )
+
+    companion object {
+        const val BASE_URL = "https://api.spoonacular.com/recipes/"
+    }
+}
