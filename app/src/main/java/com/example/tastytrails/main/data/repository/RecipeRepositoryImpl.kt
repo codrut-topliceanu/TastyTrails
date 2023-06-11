@@ -2,7 +2,9 @@ package com.example.tastytrails.main.data.repository
 
 import android.app.Application
 import android.util.Log
+import com.example.tastytrails.main.data.local.RecipeDao
 import com.example.tastytrails.main.data.mappers.toRecipe
+import com.example.tastytrails.main.data.mappers.toRecipeEntity
 import com.example.tastytrails.main.data.remote.RecipesApi
 import com.example.tastytrails.main.domain.Recipe
 import com.example.tastytrails.main.domain.RecipeRepository
@@ -12,9 +14,10 @@ import javax.inject.Inject
 // TODO : inject
 class RecipeRepositoryImpl @Inject constructor(
     private val recipesApi: RecipesApi,
-    private val appContext: Application
+    private val recipeDao: RecipeDao
 ) : RecipeRepository {
     // TODO build a fake repo for testing OR build a fake API
+
     override suspend fun searchForRecipes(
         query: String,
         searchByName: Boolean
@@ -50,12 +53,42 @@ class RecipeRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getRecipesByPreviouslyViewed(): List<Recipe> {
-        TODO("Not yet implemented")
+    override suspend fun upsertRecipe(recipe: Recipe): RepoResult<Unit> {
+        return try {
+            val recipeEntity = recipe.toRecipeEntity()
+            recipeDao.upsert(recipeEntity)
+            RepoResult.Success(Unit)
+        } catch (e: Exception) {
+            Log.e("RecipeRepositoryImpl", "upsertRecipe exception : ${e.message}")
+            RepoResult.Error("Stubborn snack! There was an error saving the item, apologies.")
+        }
     }
 
-    override suspend fun getRecipesByFavorites(): List<Recipe> {
-        TODO("Not yet implemented")
+    override suspend fun getRecipesByPreviouslyViewed(previouslyViewed: Boolean): RepoResult<List<Recipe>> {
+        return try {
+            val recipeList = recipeDao.getAllViewed(previouslyViewed)
+            RepoResult.Success(recipeList.map { it.toRecipe() })
+        } catch (e: Exception) {
+            Log.e("RecipeRepositoryImpl", "getRecipesByPreviouslyViewed exception : ${e.message}")
+            RepoResult.Error(
+                "Apologies, couldn't get the requested snack list. Try a sandwich instead?",
+                null
+            )
+        }
     }
+
+    override suspend fun getRecipesByFavorites(favorite: Boolean): RepoResult<List<Recipe>> {
+        return try {
+            val recipeList = recipeDao.getAllFavorite(favorite)
+            RepoResult.Success(recipeList.map { it.toRecipe() })
+        } catch (e: Exception) {
+            Log.e("RecipeRepositoryImpl", "getRecipesByFavorites exception : ${e.message}")
+            RepoResult.Error(
+                "Apologies, couldn't get the requested snack list. Try a sandwich instead?",
+                null
+            )
+        }
+    }
+
 
 }

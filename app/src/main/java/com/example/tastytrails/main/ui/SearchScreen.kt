@@ -1,6 +1,5 @@
 package com.example.tastytrails.main.ui
 
-import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -72,8 +71,10 @@ enum class FilterOptions {
     HEALTH_SCORE // todo
 }
 
+// TODO : break this (and other) classes/ functions into smaller bits
 // TODO: remember to handle configuration changes
 // TODO : Add shimmer/in-progress(disable buttons when shimmer is visible)
+// TODO : handle sorting options
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen(
@@ -135,7 +136,8 @@ fun SearchScreen(
             )
             LazyColumn(
                 modifier = Modifier
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .weight(1f),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
 
@@ -167,8 +169,10 @@ fun SearchScreen(
                     itemContent = { _, item: Recipe ->
                         RecipeCard(
                             recipe = item,
+                            saveRecipeExecute = {
+                                viewModel.executeSaveViewedRecipe(item)
+                            },
                             onRecipeClicked = {
-                                Log.e("hiltViewModel", viewModel.toString())
                                 viewModel.updateSearchScreenUiState(
                                     SearchScreenStateAction.UpdateCurrentlySelectedRecipe
                                         (item)
@@ -178,7 +182,51 @@ fun SearchScreen(
                         )
                     }
                 )
-                // TODO : put up a favorites list (maybe even replace the cached one)
+            }
+
+            Row(modifier = Modifier.padding(bottom = 5.dp)) {
+                FilterChip(
+                    selected = viewState.listDisplayMode == ListDisplayMode.CURRENT_SEARCH,
+                    onClick = {
+                        viewModel.executeChangeList(ListDisplayMode.CURRENT_SEARCH)
+                    },
+                    enabled = !viewState.inProgress,
+                    label = {
+                        Text(
+                            "Search",
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+                )
+                FilterChip(
+                    modifier = Modifier.padding(start = 5.dp, end = 5.dp),
+                    selected = viewState.listDisplayMode == ListDisplayMode.PREVIOUSLY_VIEWED,
+                    onClick = {
+                        viewModel.executeChangeList(ListDisplayMode.PREVIOUSLY_VIEWED)
+                    },
+                    enabled = !viewState.inProgress,
+                    label = {
+                        Text(
+                            "Viewed",
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+                )
+                FilterChip(
+                    selected = viewState.listDisplayMode == ListDisplayMode.FAVORITES,
+                    onClick = {
+                        viewModel.executeChangeList(ListDisplayMode.FAVORITES)
+                    },
+                    enabled = !viewState.inProgress,
+                    label = {
+                        Text(
+                            "Favorites",
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    },
+                )
+
+
             }
         }
     }
@@ -188,7 +236,7 @@ fun SearchScreen(
 private fun TastySnackBar(data: SnackbarData) {
     Snackbar(
         modifier = Modifier
-            .padding(12.dp)
+            .padding(horizontal = 10.dp, vertical = 55.dp)
             .noRippleClickable {
                 data.dismiss()
             },
@@ -326,6 +374,9 @@ private fun SearchHeader(
         keyboardActions = KeyboardActions(
             onDone = {
                 if (!viewState.inProgress) {
+                    viewModel.updateSearchScreenUiState(
+                        SearchScreenStateAction.UpdateListDisplayMode(ListDisplayMode.CURRENT_SEARCH)
+                    )
                     viewModel.executeOnlineSearch()
                     keyboardController?.hide()
                 }
@@ -337,6 +388,9 @@ private fun SearchHeader(
                     .height(50.dp)
                     .width(50.dp)
                     .unboundedRippleClickable(enabled = !viewState.inProgress) {
+                        viewModel.updateSearchScreenUiState(
+                            SearchScreenStateAction.UpdateListDisplayMode(ListDisplayMode.CURRENT_SEARCH)
+                        )
                         viewModel.executeOnlineSearch()
                         keyboardController?.hide()
                     },
@@ -395,7 +449,7 @@ private fun SearchHeader(
     }
 }
 
-private fun Modifier.noRippleClickable(onClick: () -> Unit): Modifier = composed {
+fun Modifier.noRippleClickable(onClick: () -> Unit): Modifier = composed {
     clickable(indication = null,
         interactionSource = remember { MutableInteractionSource() }) {
         onClick()
@@ -425,12 +479,14 @@ fun Modifier.unboundedRippleClickable(
 @Composable
 fun RecipeCard(
     recipe: Recipe,
+    saveRecipeExecute: () -> Unit = {},
     onRecipeClicked: () -> Unit = {}
 ) {
     Card(
         modifier = Modifier
             .padding(5.dp)
             .noRippleClickable {
+                saveRecipeExecute()
                 onRecipeClicked()
             },
         elevation = CardDefaults.cardElevation(defaultElevation = 5.dp),
@@ -490,7 +546,7 @@ fun SearchScreenPreview() {
 @Composable
 fun RecipeCardPreview() {
     RecipeCard(
-        Recipe(
+        recipe = Recipe(
             id = 7724,
             title = "Pasta With Tuna",
             imageUrl = null,

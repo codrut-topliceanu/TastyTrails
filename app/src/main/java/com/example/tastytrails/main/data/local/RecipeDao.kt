@@ -17,6 +17,12 @@ interface RecipeDao {
     @Query("SELECT * FROM recipeentity")
     fun getAll(): List<RecipeEntity>
 
+    @Query("SELECT * FROM recipeentity WHERE previouslyViewed = :viewed")
+    fun getAllViewed(viewed: Boolean): List<RecipeEntity>
+
+    @Query("SELECT * FROM recipeentity WHERE favorite = :favorite")
+    fun getAllFavorite(favorite: Boolean): List<RecipeEntity>
+
     @Query("SELECT * FROM recipeentity WHERE id = :recipeId")
     suspend fun getRecipeById(recipeId: String): RecipeEntity?
 

@@ -17,5 +17,9 @@
     <string name="header_results">Results:</string>
     <string name="header_previously_viewed">Previously viewed:</string>
     <string name="header_favorites">Favorites:</string>
+    <string name="cd_favorite_button">Favorite button</string>
+    <string name="cd_un_favorite_button">Un-Favorite button</string>
+    <string name="steps_to_cook">Steps to cook:</string>
+    <string name="ingredients">Ingredients:</string>
 
 </resources>

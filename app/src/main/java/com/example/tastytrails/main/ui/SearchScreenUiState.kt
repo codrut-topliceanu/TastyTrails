@@ -83,7 +83,7 @@ sealed class SearchScreenStateAction : StateAction<SearchScreenUiState> {
             state.copy(listDisplayMode = listDisplayMode)
     }
 
-    data class UpdateCurrentlySelectedRecipe(val currentlySelectedRecipe: Recipe?) :
+    data class UpdateCurrentlySelectedRecipe(val currentlySelectedRecipe: Recipe) :
         SearchScreenStateAction() {
         override fun updateState(state: SearchScreenUiState): SearchScreenUiState =
             state.copy(currentlySelectedRecipe = currentlySelectedRecipe)
