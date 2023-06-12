@@ -43,6 +43,7 @@ It's _main_ feature is the searching(by name or ingredients) and listing of reci
 Adding new features(flows) can be easily achieved by adding a new package next to `.main` and creating another nested navigation graph in `MainNavigation`
 
 **App architecture graph:**
+
 <img width="822" alt="image" src="https://github.com/codrut-topliceanu/TastyTrails/assets/60002907/727e2ae3-d7c2-435e-a1ba-119e102071d7">
 
 
