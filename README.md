@@ -10,10 +10,11 @@ It's build around an MVVM architecture using the following techstack:
  * Jetpack Compose
  * Jetpack Compose Navigation
  * Material3 UI components
- * DaggerHilt for dependency injection
+ * Hilt for dependency injection
  * Retrofit2 for Api calls + Moshi for deserialization
  * Coil for async image loading
  * Room for local db
+ * DataStore Preferences for saving theme configuration
 
 
 
@@ -25,6 +26,7 @@ It's build around an MVVM architecture using the following techstack:
  * See details about each recipe such as image, name, health score, full summary, ingredients, instructions, link to source url. And ability to mark a recipe as favorite.
  * Supports Material3 (Material You) dynamic color and icon theming.
  * Relevant errors are displayed to the user in a snackbar.
+ * Ability to alter DarkMode(Auto/On/Off) and DynamicTheme(On/Off)
 
 
 
