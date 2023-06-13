@@ -64,7 +64,7 @@ Adding new features(flows) can be easily achieved by adding a new package next t
 
 
 ### Posibile features worth adding:
-* A "wizard" to to read out loud the cooking instructions as the user is following along.
+* A bot to read out loud the cooking instructions as the user is following along.
 * User personalization : load preferences/intolerances into a user profile and work off that when searching for recipes.
 * Calorie calculator/tracker.
 
