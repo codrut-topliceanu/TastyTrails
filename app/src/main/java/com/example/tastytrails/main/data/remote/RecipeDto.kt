@@ -1,7 +1,5 @@
 package com.example.tastytrails.main.data.remote
 
-// todo: delete unnecessary fields?
-
 data class RecipeResponse(
     val results: List<RecipeDto>?,
     val offset: Long?,
@@ -45,7 +43,6 @@ data class RecipeDto(
     val spoonacularSourceUrl: String?,
     val usedIngredientCount: Long?,
     val missedIngredientCount: Long?,
-//    val missedIngredients: List<MissedIngredient>?,
     val likes: Long?,
     val usedIngredients: List<Any?>?,
     val unusedIngredients: List<Any?>?,
@@ -63,25 +60,7 @@ data class ExtendedIngredient(
     val amount: Double?,
     val unit: String?,
     val meta: List<String>?,
-//    val measures: Measures?,
 )
-
-//data class Measures(
-//    val us: Us?,
-//    val metric: Metric?,
-//)
-
-//data class Us(
-//    val amount: Double?,
-//    val unitShort: String?,
-//    val unitLong: String?,
-//)
-
-//data class Metric(
-//    val amount: Double?,
-//    val unitShort: String?,
-//    val unitLong: String?,
-//)
 
 data class AnalyzedInstruction(
     val name: String?,
@@ -91,35 +70,4 @@ data class AnalyzedInstruction(
 data class Step(
     val number: Long?,
     val step: String?,
-//    val ingredients: List<Ingredient>?,
-//    val equipment: List<Equipment>?,
 )
-
-//data class Ingredient(
-//    val id: Long?,
-//    val name: String?,
-//    val localizedName: String?,
-//    val image: String?,
-//)
-
-//data class Equipment(
-//    val id: Long?,
-//    val name: String?,
-//    val localizedName: String?,
-//    val image: String?,
-//)
-
-//data class MissedIngredient(
-//    val id: Long?,
-//    val amount: Double?,
-//    val unit: String?,
-//    val unitLong: String?,
-//    val unitShort: String?,
-//    val aisle: String?,
-//    val name: String?,
-//    val original: String?,
-//    val originalName: String?,
-//    val meta: List<String>?,
-//    val image: String?,
-//    val extendedName: String?,
-//)

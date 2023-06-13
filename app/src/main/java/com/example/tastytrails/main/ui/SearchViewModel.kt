@@ -1,14 +1,24 @@
 package com.example.tastytrails.main.ui
 
+import android.util.Log
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.emptyPreferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.tastytrails.datastore.PreferencesKeys
+import com.example.tastytrails.datastore.ThemeSettings
 import com.example.tastytrails.main.domain.Recipe
 import com.example.tastytrails.main.domain.RecipeRepository
 import com.example.tastytrails.utils.RepoResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -16,11 +26,23 @@ import javax.inject.Inject
 
 @HiltViewModel()
 class SearchViewModel @Inject constructor(
-    private val repository: RecipeRepository
+    private val repository: RecipeRepository,
+    private val dataStore: DataStore<Preferences>
 ) : ViewModel() {
 
     lateinit var state: StateFlow<SearchScreenUiState>
     private val _searchScreenUiState = MutableStateFlow(SearchScreenUiState())
+
+    val themeSettingsFlow: Flow<ThemeSettings> = dataStore.data
+        .catch {
+            Log.e("SearchViewModel", "userPreferencesFlow dataStore.data Exception : ${it.message}")
+            emit(emptyPreferences())
+        }.map { preferences ->
+            ThemeSettings(
+                darkMode = preferences[PreferencesKeys.DARK_MODE_SETTING] ?: 0,
+                dynamicThemeEnabled = preferences[PreferencesKeys.DYNAMIC_THEME_SETTING] ?: true
+            )
+        }
 
     /**
      * Previous search results, used when switching between [ListDisplayMode]s
@@ -55,7 +77,7 @@ class SearchViewModel @Inject constructor(
             // Call server
             when (val repoResult =
                 repository.searchForRecipes(
-                    _searchScreenUiState.value.searchQuery,
+                    _searchScreenUiState.value.searchQuery.trim(),
                     _searchScreenUiState.value.searchByName
                 )) {
                 is RepoResult.Error -> {
@@ -73,10 +95,13 @@ class SearchViewModel @Inject constructor(
                     repoResult.data?.let { newList ->
                         // Update list with results
                         updateSearchScreenUiState(
-                            SearchScreenStateAction.UpdateRecipesList(newList)
+                            SearchScreenStateAction.UpdateRecipesListWithSort(
+                                newList,
+                                _searchScreenUiState.value.currentSort
+                            )
                         )
 
-                        previousSearchResults = newList
+                        previousSearchResults = _searchScreenUiState.value.recipesList
 
                         // Switch list to results search
                         updateSearchScreenUiState(
@@ -132,6 +157,9 @@ class SearchViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Switches the currently displayed list of results: [ListDisplayMode]
+     */
     fun executeChangeList(switchTo: ListDisplayMode) {
         // This shouldn't be needed, but it's safer to check anyway.
         if (_searchScreenUiState.value.listDisplayMode == switchTo) return
@@ -140,7 +168,10 @@ class SearchViewModel @Inject constructor(
             when (switchTo) {
                 ListDisplayMode.CURRENT_SEARCH -> {
                     updateSearchScreenUiState(
-                        SearchScreenStateAction.UpdateRecipesList(previousSearchResults)
+                        SearchScreenStateAction.UpdateRecipesListWithSort(
+                            previousSearchResults,
+                            _searchScreenUiState.value.currentSort
+                        )
                     )
                     updateSearchScreenUiState(
                         SearchScreenStateAction.UpdateListDisplayMode(switchTo)
@@ -152,7 +183,10 @@ class SearchViewModel @Inject constructor(
                     if (repoResult is RepoResult.Success) {
                         repoResult.data?.let {
                             updateSearchScreenUiState(
-                                SearchScreenStateAction.UpdateRecipesList(it)
+                                SearchScreenStateAction.UpdateRecipesListWithSort(
+                                    it,
+                                    _searchScreenUiState.value.currentSort
+                                )
                             )
                         }
                         updateSearchScreenUiState(
@@ -174,7 +208,10 @@ class SearchViewModel @Inject constructor(
                     if (repoResult is RepoResult.Success) {
                         repoResult.data?.let {
                             updateSearchScreenUiState(
-                                SearchScreenStateAction.UpdateRecipesList(it)
+                                SearchScreenStateAction.UpdateRecipesListWithSort(
+                                    it,
+                                    _searchScreenUiState.value.currentSort
+                                )
                             )
                         }
                         updateSearchScreenUiState(
@@ -195,6 +232,18 @@ class SearchViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Saves to the dataStore the new [ThemeSettings]
+     */
+    fun executeUpdateThemeSettings(themeSettings: ThemeSettings) {
+        viewModelScope.launch(Dispatchers.IO) {
+            dataStore.edit { preferences ->
+                preferences[PreferencesKeys.DARK_MODE_SETTING] = themeSettings.darkMode
+                preferences[PreferencesKeys.DYNAMIC_THEME_SETTING] =
+                    themeSettings.dynamicThemeEnabled
+            }
+        }
+    }
 
     /**
      * Updates the ui state of [SearchScreen].

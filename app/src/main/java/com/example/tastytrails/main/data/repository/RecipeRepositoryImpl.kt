@@ -2,6 +2,7 @@ package com.example.tastytrails.main.data.repository
 
 import android.app.Application
 import android.util.Log
+import com.example.tastytrails.R
 import com.example.tastytrails.main.data.local.RecipeDao
 import com.example.tastytrails.main.data.mappers.toRecipe
 import com.example.tastytrails.main.data.mappers.toRecipeEntity
@@ -11,10 +12,10 @@ import com.example.tastytrails.main.domain.RecipeRepository
 import com.example.tastytrails.utils.RepoResult
 import javax.inject.Inject
 
-// TODO : inject
 class RecipeRepositoryImpl @Inject constructor(
     private val recipesApi: RecipesApi,
-    private val recipeDao: RecipeDao
+    private val recipeDao: RecipeDao,
+    private val context: Application
 ) : RecipeRepository {
     // TODO build a fake repo for testing OR build a fake API
 
@@ -35,20 +36,20 @@ class RecipeRepositoryImpl @Inject constructor(
             Log.e("getRecipesByName", "getRecipesByName: $response")
             if (!response.isSuccessful) {
                 Log.e("RecipeRepositoryImpl", "searchForRecipes error : ${response.errorBody()}")
-                return RepoResult.Error("Server isn't done cooking, try again later")
+                return RepoResult.Error(context.getString(R.string.error_search_recipe))
             }
 
             val result = response.body()?.results?.map { it.toRecipe() }
 
             return if (result.isNullOrEmpty()) {
-                RepoResult.Error("Couldn't find anything tasty down that trail. :(")
+                RepoResult.Error(context.getString(R.string.error_search_recipe_empty_search))
             } else {
                 RepoResult.Success(result)
             }
 
         } catch (e: Exception) {
             Log.e("RecipeRepositoryImpl", "searchForRecipes exception : ${e.message}")
-            return RepoResult.Error("Something didn't go right, try again later please.")
+            return RepoResult.Error(context.getString(R.string.error_search_recipe_exception))
 
         }
     }
@@ -60,7 +61,7 @@ class RecipeRepositoryImpl @Inject constructor(
             RepoResult.Success(Unit)
         } catch (e: Exception) {
             Log.e("RecipeRepositoryImpl", "upsertRecipe exception : ${e.message}")
-            RepoResult.Error("Stubborn snack! There was an error saving the item, apologies.")
+            RepoResult.Error(context.getString(R.string.error_upser_exception))
         }
     }
 
@@ -71,7 +72,7 @@ class RecipeRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             Log.e("RecipeRepositoryImpl", "getRecipesByPreviouslyViewed exception : ${e.message}")
             RepoResult.Error(
-                "Apologies, couldn't get the requested snack list. Try a sandwich instead?",
+                context.getString(R.string.error_get_recipes_exception),
                 null
             )
         }
@@ -84,7 +85,7 @@ class RecipeRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             Log.e("RecipeRepositoryImpl", "getRecipesByFavorites exception : ${e.message}")
             RepoResult.Error(
-                "Apologies, couldn't get the requested snack list. Try a sandwich instead?",
+                context.getString(R.string.error_get_recipes_exception),
                 null
             )
         }

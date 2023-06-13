@@ -6,7 +6,7 @@
     <string name="cd_checked">Checked</string>
     <string name="sort_by_a_z">A-Z</string>
     <string name="sort_by_z_a">Z-A</string>
-    <string name="sort_by_health_score">Health Score</string>
+    <string name="sort_by_health_score">Healthiest</string>
     <string name="dish_name_examples">pasta, burgers, meatballs…</string>
     <string name="ingredients_examples">tomatoes, flour, onion…</string>
     <string name="cd_search_button">Search button</string>
@@ -21,5 +21,16 @@
     <string name="cd_un_favorite_button">Un-Favorite button</string>
     <string name="steps_to_cook">Steps to cook:</string>
     <string name="ingredients">Ingredients:</string>
+    <string name="health_score">Health Score</string>
+    <string name="search_chip">Search</string>
+    <string name="viewed_chip">Viewed</string>
+    <string name="favorites_chip">Favorites</string>
+    <string name="incorrect_format_error">An incorrect format isn\'t tasty</string>
+    <string name="no_description_available_error">No description available.</string>
+    <string name="error_search_recipe">Server isn\'t done cooking, try again later</string>
+    <string name="error_search_recipe_empty_search">Couldn\'t find anything tasty down that trail. :(</string>
+    <string name="error_search_recipe_exception">Something didn\'t go right, try again later please.</string>
+    <string name="error_upser_exception">Stubborn snack! There was an error saving the item, apologies.</string>
+    <string name="error_get_recipes_exception">Apologies, couldn\'t get the requested snack list. Try a sandwich instead?</string>
 
 </resources>

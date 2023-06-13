@@ -1,11 +1,11 @@
 package com.example.tastytrails
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
@@ -13,47 +13,54 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
+import com.example.tastytrails.datastore.ThemeSettings
 import com.example.tastytrails.main.ui.RecipeDetailScreen
 import com.example.tastytrails.main.ui.SearchScreen
 import com.example.tastytrails.main.ui.SearchViewModel
-import kotlinx.coroutines.CoroutineScope
+import com.example.tastytrails.ui.theme.TastyTrailsTheme
+import kotlinx.coroutines.flow.Flow
 
 private object MainDestinations {
     const val SEARCH_SCREEN = "search"
     const val RECIPE_DETAILS_SCREEN = "recipe_details"
 }
 
+
+
 @Composable
 fun MainNavigation(
-    modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
-    coroutineScope: CoroutineScope = rememberCoroutineScope()
+    themeSettingsFlow: Flow<ThemeSettings>
 ) {
 
-    NavHost(
-        navController = navController,
-        startDestination = "searchFeature"
-    ) {
-        // Navigation of the main feature: Search Screen
-        navigation(
-            startDestination = MainDestinations.SEARCH_SCREEN,
-            route = "searchFeature"
+    val themeSettingsState by themeSettingsFlow.collectAsStateWithLifecycle(ThemeSettings())
+
+    TastyTrailsTheme(themeSettingsState) {
+        NavHost(
+            navController = navController,
+            startDestination = "searchFeature"
         ) {
+            // Navigation of the main feature: Search Screen
+            navigation(
+                startDestination = MainDestinations.SEARCH_SCREEN,
+                route = "searchFeature"
+            ) {
 
-            composable(MainDestinations.SEARCH_SCREEN) {
-                val viewModel = it.sharedViewModel<SearchViewModel>(navController)
-                SearchScreen(
-                    viewModel = viewModel,
-                    onRecipeClicked = { navController.navigate(MainDestinations.RECIPE_DETAILS_SCREEN) }
-                )
+                composable(MainDestinations.SEARCH_SCREEN) {
+                    val searchViewModel = it.sharedViewModel<SearchViewModel>(navController)
+                    SearchScreen(
+                        searchViewModel = searchViewModel,
+                        onRecipeClicked = { navController.navigate(MainDestinations.RECIPE_DETAILS_SCREEN) }
+                    )
+                }
+
+                composable(MainDestinations.RECIPE_DETAILS_SCREEN) {
+                    val viewModel = it.sharedViewModel<SearchViewModel>(navController)
+                    RecipeDetailScreen(viewModel = viewModel) { navController.popBackStack() }
+                }
             }
 
-            composable(MainDestinations.RECIPE_DETAILS_SCREEN) {
-                val viewModel = it.sharedViewModel<SearchViewModel>(navController)
-                RecipeDetailScreen(viewModel = viewModel) { navController.popBackStack() }
-            }
         }
-
     }
 }
 

@@ -40,6 +40,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.tastytrails.R
+import com.example.tastytrails.utils.noRippleClickable
+import com.example.tastytrails.utils.unboundedRippleClickable
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -135,11 +137,10 @@ fun RecipeDetailScreen(
             // Recipe title
             Text(
                 modifier = Modifier
-                    .padding(top = 10.dp)
+                    .padding(top = 15.dp)
                     .align(CenterHorizontally),
                 text = recipe.title,
                 style = MaterialTheme.typography.headlineSmall,
-                textAlign = TextAlign.Justify
             )
 
             LazyColumn(
@@ -169,6 +170,17 @@ fun RecipeDetailScreen(
                             overflow = TextOverflow.Ellipsis,
                             textAlign = TextAlign.Justify
                         )
+                    }
+                }
+
+                if (recipe.healthScore != null) {
+                    item {
+                        Text(
+                            modifier = Modifier.padding(top = 5.dp),
+                            text = stringResource(R.string.health_score) + ": ${recipe.healthScore}❤",
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
+
                     }
                 }
 
@@ -223,7 +235,7 @@ fun RecipeDetailScreen(
                                 },
                             text = recipe.spoonSourceUrl,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onPrimary,
+                            color = MaterialTheme.colorScheme.secondary,
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis
 

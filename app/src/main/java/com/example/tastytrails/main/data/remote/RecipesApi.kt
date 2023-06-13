@@ -16,13 +16,12 @@ interface RecipesApi {
     then you must delete all data you ever obtained from the spoonacular API.
     */
 
-    // todo git ignore apikey.properties
     @Headers("Content-Type: application/json")
-    @GET("complexSearch") // todo can be used with ingredients search
+    @GET("complexSearch")
     suspend fun getRecipesByName(
         @Query("query") recipeNames: String?,
         @Query("number") resultsNumber: Int = 1,
-        @Query("includeIngredients") includeIngredients: String? = null, // test this
+        @Query("includeIngredients") includeIngredients: String? = null,
         @Query("fillIngredients") fillIngredients: Boolean = false,
         @Query("addRecipeInformation") addRecipeInformation: Boolean = false,
         @Query("ignorePantry") ignorePantry: Boolean = true,
