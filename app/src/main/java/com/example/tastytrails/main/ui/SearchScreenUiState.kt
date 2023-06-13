@@ -70,11 +70,17 @@ sealed class SearchScreenStateAction : StateAction<SearchScreenUiState> {
             state.copy(inProgress = showLoading)
     }
 
+    /**
+     * Updates the [searchByName] value AND deletes the current searchQuery.
+     */
     data class UpdateSearchByName(val searchByName: Boolean) : SearchScreenStateAction() {
         override fun updateState(state: SearchScreenUiState): SearchScreenUiState =
             state.copy(searchByName = searchByName, searchQuery = "")
     }
 
+    /**
+     * Changes current sort setting AND updates the current recipesList to match.
+     */
     data class UpdateCurrentSort(val currentSort: FilterOptions) : SearchScreenStateAction() {
         override fun updateState(state: SearchScreenUiState): SearchScreenUiState {
             return when (currentSort) {

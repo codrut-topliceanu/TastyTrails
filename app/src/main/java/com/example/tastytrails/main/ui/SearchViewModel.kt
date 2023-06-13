@@ -145,6 +145,14 @@ class SearchViewModel @Inject constructor(
                     SearchScreenStateAction.UpdateCurrentlySelectedRecipe
                         (recipeToSave)
                 )
+                /*  If the user un-favorites a recipe, we should remove it from the current displayed list
+                *  if that list is Favorites(safety check, not really necessary)*/
+                if (!favorite && state.value.listDisplayMode == ListDisplayMode.FAVORITES) {
+                    updateSearchScreenUiState(
+                        SearchScreenStateAction.UpdateRecipesListWithSort
+                            (state.value.recipesList.minus(recipe), state.value.currentSort)
+                    )
+                }
             } else {
                 repoResult.message?.let { message ->
                     updateSearchScreenUiState(

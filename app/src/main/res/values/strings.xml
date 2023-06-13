@@ -32,5 +32,12 @@
     <string name="error_search_recipe_exception">Something didn\'t go right, try again later please.</string>
     <string name="error_upser_exception">Stubborn snack! There was an error saving the item, apologies.</string>
     <string name="error_get_recipes_exception">Apologies, couldn\'t get the requested snack list. Try a sandwich instead?</string>
+    <string name="darkmode">DarkMode</string>
+    <string name="darkmode_auto">Auto</string>
+    <string name="darkmode_dark">Dark</string>
+    <string name="darkmode_light">Light</string>
+    <string name="dynamic_theme">Dynamic Theme</string>
+    <string name="dynamic_theme_on">On</string>
+    <string name="dynamic_theme_off">Off</string>
 
 </resources>

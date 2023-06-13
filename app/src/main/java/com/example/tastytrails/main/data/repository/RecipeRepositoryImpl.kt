@@ -23,19 +23,19 @@ class RecipeRepositoryImpl @Inject constructor(
         query: String,
         searchByName: Boolean
     ): RepoResult<List<Recipe>> {
-        // TODO: final step - prepare this for showtime ( results number = 10
         try {
             val response = recipesApi.getRecipesByName(
                 recipeNames = if (searchByName) query else null,
                 includeIngredients = if (searchByName) null else query,
-                resultsNumber = 1,
+                resultsNumber = 10,
                 fillIngredients = true,
                 addRecipeInformation = true,
             )
 
-            Log.e("getRecipesByName", "getRecipesByName: $response")
+            Log.i("getRecipesByName", "getRecipesByName: $response")
+
             if (!response.isSuccessful) {
-                Log.e("RecipeRepositoryImpl", "searchForRecipes error : ${response.errorBody()}")
+                Log.i("RecipeRepositoryImpl", "searchForRecipes error : ${response.errorBody()}")
                 return RepoResult.Error(context.getString(R.string.error_search_recipe))
             }
 
@@ -48,7 +48,7 @@ class RecipeRepositoryImpl @Inject constructor(
             }
 
         } catch (e: Exception) {
-            Log.e("RecipeRepositoryImpl", "searchForRecipes exception : ${e.message}")
+            Log.e("RecipeRepositoryImpl", "searchForRecipes exception : ", e)
             return RepoResult.Error(context.getString(R.string.error_search_recipe_exception))
 
         }
@@ -60,7 +60,7 @@ class RecipeRepositoryImpl @Inject constructor(
             recipeDao.upsert(recipeEntity)
             RepoResult.Success(Unit)
         } catch (e: Exception) {
-            Log.e("RecipeRepositoryImpl", "upsertRecipe exception : ${e.message}")
+            Log.e("RecipeRepositoryImpl", "upsertRecipe exception : ", e)
             RepoResult.Error(context.getString(R.string.error_upser_exception))
         }
     }
@@ -70,7 +70,10 @@ class RecipeRepositoryImpl @Inject constructor(
             val recipeList = recipeDao.getAllViewed(previouslyViewed)
             RepoResult.Success(recipeList.map { it.toRecipe() })
         } catch (e: Exception) {
-            Log.e("RecipeRepositoryImpl", "getRecipesByPreviouslyViewed exception : ${e.message}")
+            Log.e(
+                "RecipeRepositoryImpl",
+                "getRecipesByPreviouslyViewed exception : ", e
+            )
             RepoResult.Error(
                 context.getString(R.string.error_get_recipes_exception),
                 null
@@ -83,7 +86,7 @@ class RecipeRepositoryImpl @Inject constructor(
             val recipeList = recipeDao.getAllFavorite(favorite)
             RepoResult.Success(recipeList.map { it.toRecipe() })
         } catch (e: Exception) {
-            Log.e("RecipeRepositoryImpl", "getRecipesByFavorites exception : ${e.message}")
+            Log.e("RecipeRepositoryImpl", "getRecipesByFavorites exception :  ", e)
             RepoResult.Error(
                 context.getString(R.string.error_get_recipes_exception),
                 null

@@ -20,7 +20,7 @@ interface RecipesApi {
     @GET("complexSearch")
     suspend fun getRecipesByName(
         @Query("query") recipeNames: String?,
-        @Query("number") resultsNumber: Int = 1,
+        @Query("number") resultsNumber: Int = 5,
         @Query("includeIngredients") includeIngredients: String? = null,
         @Query("fillIngredients") fillIngredients: Boolean = false,
         @Query("addRecipeInformation") addRecipeInformation: Boolean = false,
