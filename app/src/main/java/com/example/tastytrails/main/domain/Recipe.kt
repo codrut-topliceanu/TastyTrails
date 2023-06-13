@@ -3,6 +3,7 @@ package com.example.tastytrails.main.domain
 
 data class Recipe(
     val id: Long,
+    val previouslyViewed: Boolean = false,
     val favorite: Boolean = false,
     val title: String,
     val imageUrl: String? = null,

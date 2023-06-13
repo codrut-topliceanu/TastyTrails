@@ -7,11 +7,12 @@ import androidx.room.PrimaryKey
 data class RecipeEntity(
     @PrimaryKey
     val id: Long,
+    val previouslyViewed: Boolean = false,
     val favorite: Boolean = false,
     val title: String,
     val imageUrl: String? = "",
     val summary: String,
-    val healthScore: Int,
+    val healthScore: Int? = null,
     val spoonSourceUrl: String,
     val instructions: List<String>,
     val ingredients: List<String>

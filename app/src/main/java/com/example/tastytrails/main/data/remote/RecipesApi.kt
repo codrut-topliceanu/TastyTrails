@@ -3,7 +3,7 @@ package com.example.tastytrails.main.data.remote
 import com.example.tastytrails.BuildConfig
 import retrofit2.Response
 import retrofit2.http.GET
-import retrofit2.http.Path
+import retrofit2.http.Headers
 import retrofit2.http.Query
 
 interface RecipesApi {
@@ -16,29 +16,17 @@ interface RecipesApi {
     then you must delete all data you ever obtained from the spoonacular API.
     */
 
-    // todo git ignore apikey.properties
-
-    @GET("complexSearch") // todo can be used with ingredients search
+    @Headers("Content-Type: application/json")
+    @GET("complexSearch")
     suspend fun getRecipesByName(
-        @Query("query") recipeName: String,
-        @Query("number") resultsNumber: Int = 5,
-        @Query("includeIngredients") includeIngredients: String = "", // test this
+        @Query("query") recipeNames: String?,
+        @Query("number") resultsNumber: Int = 1,
+        @Query("includeIngredients") includeIngredients: String? = null,
         @Query("fillIngredients") fillIngredients: Boolean = false,
         @Query("addRecipeInformation") addRecipeInformation: Boolean = false,
         @Query("ignorePantry") ignorePantry: Boolean = true,
         @Query("apiKey") apiKey: String = BuildConfig.SPOON_API_KEY
     ): Response<RecipeResponse>
-
-//    @GET("findByIngredients")
-//    suspend fun getRecipesByIngredients(
-//        @Query("ingredients") ingredients: String,
-//        @Query("number") resultsNumber: Int = 5
-//    )
-
-//    @GET("{id}/information")
-//    suspend fun getRecipeInformation(
-//        @Path("id") recipeId: Int
-//    )
 
     companion object {
         const val BASE_URL = "https://api.spoonacular.com/recipes/"
