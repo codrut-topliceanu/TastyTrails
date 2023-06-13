@@ -57,8 +57,9 @@ Adding new features(flows) can be easily achieved by adding a new package next t
 * More Compose Animations. Or [Lottie animations](http://airbnb.io/lottie/#/community-showcase).
 * Show more info for each recipe card in the results list (cooking time, diets, cuisine, etc).
 * An "Advanced Search" that can take advantage of the large array of search options the API has available.
-* Paging3 to lazy load more results.
+* Paging3 to lazy load more results. (Though spoonacular's free plan is a bit restrictive)
 * Auto-complete search options.
+* Integration testing.
 
 
 
