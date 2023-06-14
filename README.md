@@ -15,6 +15,7 @@ It's build around an MVVM architecture using the following techstack:
  * Coil for async image loading
  * Room for local db
  * DataStore Preferences for saving theme configuration
+ * Mockk for testing
 
 
 
@@ -67,5 +68,11 @@ Adding new features(flows) can be easily achieved by adding a new package next t
 * A bot to read out loud the cooking instructions as the user is following along.
 * User personalization : load preferences/intolerances into a user profile and work off that when searching for recipes.
 * Calorie calculator/tracker.
+
+### Demo:
+
+
+
+https://github.com/codrut-topliceanu/TastyTrails/assets/60002907/882d2df1-63d0-41e9-9bd9-e259d7f7c1cd
 
 
