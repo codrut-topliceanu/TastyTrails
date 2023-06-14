@@ -15,8 +15,8 @@ fun RecipeDto.toRecipeEntity(): RecipeEntity =
         summary = summary ?: "",
         healthScore = healthScore,
         spoonSourceUrl = spoonacularSourceUrl ?: sourceUrl ?: "",
-        instructions = getStepInstructions(analyzedInstructions) ?: listOf(),
-        ingredients = getIngredients(extendedIngredients) ?: listOf()
+        instructions = getStepInstructions(analyzedInstructions),
+        ingredients = getIngredients(extendedIngredients)
     )
 
 fun RecipeDto.toRecipe(): Recipe =
@@ -27,8 +27,8 @@ fun RecipeDto.toRecipe(): Recipe =
         summary = summary ?: "",
         healthScore = healthScore,
         spoonSourceUrl = spoonacularSourceUrl ?: sourceUrl ?: "",
-        instructions = getStepInstructions(analyzedInstructions) ?: listOf(),
-        ingredients = getIngredients(extendedIngredients) ?: listOf()
+        instructions = getStepInstructions(analyzedInstructions),
+        ingredients = getIngredients(extendedIngredients)
     )
 
 fun RecipeEntity.toRecipe(): Recipe =
@@ -59,12 +59,14 @@ fun Recipe.toRecipeEntity(): RecipeEntity =
         ingredients = ingredients
     )
 
-private fun getStepInstructions(analyzedInstructions: List<AnalyzedInstruction>?): List<String>? =
-    analyzedInstructions?.first()?.steps?.map { step ->
-        step.step ?: ""
-    }
+private fun getStepInstructions(analyzedInstructions: List<AnalyzedInstruction?>?): List<String> {
+    return if(analyzedInstructions.isNullOrEmpty()) listOf()
+    else analyzedInstructions.first()?.steps?.map { step ->
+        step?.step ?: ""
+    } ?: listOf()
+}
 
-private fun getIngredients(extendedIngredients: List<ExtendedIngredient>?): List<String>? =
+private fun getIngredients(extendedIngredients: List<ExtendedIngredient?>?): List<String> =
     extendedIngredients?.map { extendedIngredient ->
-        extendedIngredient.original ?: ""
-    }
+        extendedIngredient?.original ?: ""
+    } ?: listOf()

@@ -1,6 +1,5 @@
 package com.example.tastytrails.main.ui
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,19 +14,15 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarData
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -44,28 +39,19 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.text.HtmlCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
 import com.example.tastytrails.R
 import com.example.tastytrails.datastore.ThemeSettings
 import com.example.tastytrails.main.domain.Recipe
-import com.example.tastytrails.ui.theme.TastyTrailsTheme
-import com.example.tastytrails.utils.noRippleClickable
+import com.example.tastytrails.main.ui.components.RecipeCard
+import com.example.tastytrails.main.ui.components.TastySnackBar
 import com.example.tastytrails.utils.unboundedRippleClickable
 
-
-// TODO : break this (and other) classes/ functions into smaller bits
-// TODO: add tests for domain and data layers
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen(
@@ -78,6 +64,7 @@ fun SearchScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val isQueryValid = rememberSaveable { mutableStateOf(true) }
 
+    // Consumes the first snackBarMessage in list, recomposes when messages size changes.
     LaunchedEffect(key1 = viewState.snackBarMessages.size) {
         viewState.snackBarMessages.firstOrNull()?.let { snackBarMessage ->
             snackbarHostState.showSnackbar(snackBarMessage.message)
@@ -118,6 +105,13 @@ fun SearchScreen(
             }
         },
     ) { paddingValues ->
+        if (viewState.inProgress) {
+            LinearProgressIndicator(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(paddingValues)
+            )
+        }
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -137,18 +131,20 @@ fun SearchScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
 
-                // Loading indicator
-                if (viewState.inProgress) {
-                    item {
-                        CircularProgressIndicator()
-                    }
-                }
                 // Header item
-                if (viewState.recipesList.isNotEmpty() && viewState.listDisplayMode != ListDisplayMode.CURRENT_SEARCH) {
+                if (viewState.recipesList.isNotEmpty()
+                    && viewState.listDisplayMode != ListDisplayMode.CURRENT_SEARCH
+                ) {
                     item {
                         val headerLabel = when (viewState.listDisplayMode) {
-                            ListDisplayMode.PREVIOUSLY_VIEWED -> stringResource(id = R.string.header_previously_viewed)
-                            ListDisplayMode.FAVORITES -> stringResource(id = R.string.header_favorites)
+                            ListDisplayMode.PREVIOUSLY_VIEWED -> {
+                                stringResource(id = R.string.header_previously_viewed)
+                            }
+
+                            ListDisplayMode.FAVORITES -> {
+                                stringResource(id = R.string.header_favorites)
+                            }
+
                             else -> ""
                         }
                         Text(
@@ -165,10 +161,8 @@ fun SearchScreen(
                     itemContent = { _, item: Recipe ->
                         RecipeCard(
                             recipe = item,
-                            saveRecipeExecute = {
-                                searchViewModel.executeSaveViewedRecipe(item)
-                            },
                             onRecipeClicked = {
+                                searchViewModel.executeSaveViewedRecipe(item)
                                 searchViewModel.updateSearchScreenUiState(
                                     SearchScreenStateAction.UpdateCurrentlySelectedRecipe
                                         (item)
@@ -179,7 +173,6 @@ fun SearchScreen(
                     }
                 )
             }
-
             Row(
                 modifier = Modifier.padding(bottom = 5.dp),
                 content = listDisplayModeChips(viewState, searchViewModel)
@@ -188,12 +181,16 @@ fun SearchScreen(
     }
 }
 
+/**
+ * Sets up the chips at the bottom of the screen that are used to
+ * switch between list modes: [ListDisplayMode]
+ */
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 private fun listDisplayModeChips(
     viewState: SearchScreenUiState,
     viewModel: SearchViewModel
-): @Composable() (RowScope.() -> Unit) =
+): @Composable (RowScope.() -> Unit) =
     {
         FilterChip(
             selected = viewState.listDisplayMode == ListDisplayMode.CURRENT_SEARCH,
@@ -239,29 +236,15 @@ private fun listDisplayModeChips(
 
     }
 
-@Composable
-private fun TastySnackBar(data: SnackbarData) {
-    Snackbar(
-        modifier = Modifier
-            .padding(horizontal = 10.dp, vertical = 55.dp)
-            .noRippleClickable {
-                data.dismiss()
-            },
-        containerColor = MaterialTheme.colorScheme.secondaryContainer
-    ) {
-        Text(
-            text = data.visuals.message,
-            color = MaterialTheme.colorScheme.onSecondaryContainer
-        )
-    }
-}
-
+/**
+ * Sets up the topBar menu items, namely 'filter options' and 'theme settings'
+ */
 @Composable
 private fun setupTopBarActions(
     contextMenuVisible: MutableState<Boolean>,
     searchViewModel: SearchViewModel,
     currentSort: FilterOptions,
-): @Composable() (RowScope.() -> Unit) =
+): @Composable (RowScope.() -> Unit) =
     {
 
         val themeState =
@@ -288,10 +271,10 @@ private fun setupTopBarActions(
             onDismissRequest = { themeContextMenuVisible.value = false }) {
             Text(
                 modifier = Modifier.padding(start = 15.dp),
-                text = "DarkMode"
+                text = stringResource(R.string.darkmode)
             )
             DropdownMenuItem(
-                text = { Text(text = "Auto") },
+                text = { Text(text = stringResource(R.string.darkmode_auto)) },
                 onClick = {
                     themeContextMenuVisible.value = false
                     searchViewModel.executeUpdateThemeSettings(
@@ -310,7 +293,7 @@ private fun setupTopBarActions(
                 }
             )
             DropdownMenuItem(
-                text = { Text(text = "Dark") },
+                text = { Text(text = stringResource(R.string.darkmode_dark)) },
                 onClick = {
                     themeContextMenuVisible.value = false
                     searchViewModel.executeUpdateThemeSettings(
@@ -330,7 +313,7 @@ private fun setupTopBarActions(
                 }
             )
             DropdownMenuItem(
-                text = { Text(text = "Light") },
+                text = { Text(text = stringResource(R.string.darkmode_light)) },
                 onClick = {
                     themeContextMenuVisible.value = false
                     searchViewModel.executeUpdateThemeSettings(
@@ -351,10 +334,10 @@ private fun setupTopBarActions(
             )
             Text(
                 modifier = Modifier.padding(start = 15.dp),
-                text = "Dynamic Theme"
+                text = stringResource(R.string.dynamic_theme)
             )
             DropdownMenuItem(
-                text = { Text(text = "On") },
+                text = { Text(text = stringResource(R.string.dynamic_theme_on)) },
                 onClick = {
                     themeContextMenuVisible.value = false
                     searchViewModel.executeUpdateThemeSettings(
@@ -374,7 +357,7 @@ private fun setupTopBarActions(
                 }
             )
             DropdownMenuItem(
-                text = { Text(text = "Off") },
+                text = { Text(text = stringResource(R.string.dynamic_theme_off)) },
                 onClick = {
                     themeContextMenuVisible.value = false
                     searchViewModel.executeUpdateThemeSettings(
@@ -479,9 +462,13 @@ private fun setupTopBarActions(
         }
     }
 
+/**
+ * Search bar component that contains the search input field and the
+ * search by name/ingredients chips
+ */
 @Composable
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
-private fun SearchHeader(
+fun SearchHeader(
     viewModel: SearchViewModel,
     viewState: SearchScreenUiState,
     isQueryValid: MutableState<Boolean>
@@ -549,7 +536,13 @@ private fun SearchHeader(
                 painter = painterResource(id = R.drawable.search_icon),
                 contentDescription = stringResource(R.string.cd_search_button),
                 contentScale = ContentScale.Inside,
-                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary),
+                colorFilter = if (viewState.inProgress) {
+                    ColorFilter.tint(MaterialTheme.colorScheme.secondary)
+                } else {
+                    ColorFilter.tint(
+                        MaterialTheme.colorScheme.primary
+                    )
+                },
             )
 
         },
@@ -599,89 +592,4 @@ private fun SearchHeader(
         )
 
     }
-}
-
-@Composable
-fun RecipeCard(
-    recipe: Recipe,
-    saveRecipeExecute: () -> Unit = {},
-    onRecipeClicked: () -> Unit = {}
-) {
-    Card(
-        modifier = Modifier
-            .padding(5.dp)
-            .noRippleClickable {
-                saveRecipeExecute()
-                onRecipeClicked()
-            },
-        elevation = CardDefaults.cardElevation(defaultElevation = 5.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
-    ) {
-        Row(
-            Modifier
-                .padding(5.dp)
-                .fillMaxWidth()
-        ) {
-            AsyncImage(
-                modifier = Modifier
-                    .height(100.dp)
-                    .width(135.dp),
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(recipe.imageUrl)
-                    .crossfade(true)
-                    .build(),
-                contentDescription = stringResource(R.string.cd_image_of_recipe),
-                placeholder = painterResource(R.drawable.downloading_icon),
-                error = painterResource(R.drawable.cloud_off_icon),
-                fallback = painterResource(R.drawable.cloud_off_icon),
-            )
-            Column(
-                modifier = Modifier
-                    .padding(start = 5.dp)
-            ) {
-                Text(
-                    text = recipe.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                var summary =
-                    HtmlCompat.fromHtml(recipe.summary, HtmlCompat.FROM_HTML_MODE_LEGACY).toString()
-                summary = if (summary.isBlank()) {
-                    stringResource(R.string.no_description_available_error)
-                } else {
-                    "${recipe.healthScore}❤ : $summary"
-                }
-                Text(
-                    text = summary,
-                    style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun SearchScreenPreview() {
-    TastyTrailsTheme {
-        SearchScreen()
-    }
-}
-
-
-@Preview(showBackground = true)
-@Composable
-fun RecipeCardPreview() {
-    RecipeCard(
-        recipe = Recipe(
-            id = 7724,
-            title = "Pasta With Tuna",
-            healthScore = 30,
-            imageUrl = null,
-            summary = "Pasta With Tuna is a <b>pescatarian</b> main course. This recipe serves 4. For <b>\$1.68 per serving</b>, this recipe <b>covers 28%</b> of your daily requirements of vitamins and minerals. One serving contains <b>423 calories</b>, <b>24g of protein</b>, and <b>10g of fat</b>. 2 people have made this recipe and would make it again. This recipe from Foodista requires flour, parsley, non-fat milk, and parmesan cheese. From preparation to the plate, this recipe takes around <b>45 minutes</b>. All things considered, we decided this recipe <b>deserves a spoonacular score of 92%</b>. This score is amazing. <a href=\\\"https://spoonacular.com/recipes/pasta-and-tuna-salad-ensalada-de-pasta-y-atn-226303\\\">Pastan and Tuna Salad (Ensalada de Pasta y Atún)</a>, <a href=\\\"https://spoonacular.com/recipes/tuna-pasta-565100\\\">Tuna Pasta</a>, and <a href=\\\"https://spoonacular.com/recipes/tuna-pasta-89136\\\">Tuna Pasta</a> are very similar to this recipe.",
-        ),
-    )
 }
