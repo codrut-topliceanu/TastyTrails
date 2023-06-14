@@ -17,7 +17,6 @@ class RecipeRepositoryImpl @Inject constructor(
     private val recipeDao: RecipeDao,
     private val context: Application
 ) : RecipeRepository {
-    // TODO build a fake repo for testing OR build a fake API
 
     override suspend fun searchForRecipes(
         query: String,
@@ -35,7 +34,7 @@ class RecipeRepositoryImpl @Inject constructor(
             Log.i("getRecipesByName", "getRecipesByName: $response")
 
             if (!response.isSuccessful) {
-                Log.i("RecipeRepositoryImpl", "searchForRecipes error : ${response.errorBody()}")
+                Log.e("RecipeRepositoryImpl", "searchForRecipes error : ${response.errorBody()}")
                 return RepoResult.Error(context.getString(R.string.error_search_recipe))
             }
 

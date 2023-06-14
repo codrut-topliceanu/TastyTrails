@@ -3,7 +3,6 @@ package com.example.tastytrails.main.data.local
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Upsert
-import com.example.tastytrails.main.domain.Recipe
 
 @Dao
 interface RecipeDao {

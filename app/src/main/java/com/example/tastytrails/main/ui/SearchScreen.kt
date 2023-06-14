@@ -15,11 +15,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -52,8 +52,6 @@ import com.example.tastytrails.main.ui.components.RecipeCard
 import com.example.tastytrails.main.ui.components.TastySnackBar
 import com.example.tastytrails.utils.unboundedRippleClickable
 
-
-// TODO: add tests for domain and data layers
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen(
@@ -107,6 +105,13 @@ fun SearchScreen(
             }
         },
     ) { paddingValues ->
+        if (viewState.inProgress) {
+            LinearProgressIndicator(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(paddingValues)
+            )
+        }
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -126,18 +131,20 @@ fun SearchScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
 
-                // Loading indicator
-                if (viewState.inProgress) {
-                    item {
-                        CircularProgressIndicator()
-                    }
-                }
                 // Header item
-                if (viewState.recipesList.isNotEmpty() && viewState.listDisplayMode != ListDisplayMode.CURRENT_SEARCH) {
+                if (viewState.recipesList.isNotEmpty()
+                    && viewState.listDisplayMode != ListDisplayMode.CURRENT_SEARCH
+                ) {
                     item {
                         val headerLabel = when (viewState.listDisplayMode) {
-                            ListDisplayMode.PREVIOUSLY_VIEWED -> stringResource(id = R.string.header_previously_viewed)
-                            ListDisplayMode.FAVORITES -> stringResource(id = R.string.header_favorites)
+                            ListDisplayMode.PREVIOUSLY_VIEWED -> {
+                                stringResource(id = R.string.header_previously_viewed)
+                            }
+
+                            ListDisplayMode.FAVORITES -> {
+                                stringResource(id = R.string.header_favorites)
+                            }
+
                             else -> ""
                         }
                         Text(
@@ -166,7 +173,6 @@ fun SearchScreen(
                     }
                 )
             }
-
             Row(
                 modifier = Modifier.padding(bottom = 5.dp),
                 content = listDisplayModeChips(viewState, searchViewModel)
@@ -530,7 +536,13 @@ fun SearchHeader(
                 painter = painterResource(id = R.drawable.search_icon),
                 contentDescription = stringResource(R.string.cd_search_button),
                 contentScale = ContentScale.Inside,
-                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary),
+                colorFilter = if (viewState.inProgress) {
+                    ColorFilter.tint(MaterialTheme.colorScheme.secondary)
+                } else {
+                    ColorFilter.tint(
+                        MaterialTheme.colorScheme.primary
+                    )
+                },
             )
 
         },
