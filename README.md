@@ -53,12 +53,12 @@ Adding new features(flows) can be easily achieved by adding a new package next t
 
 
 ### Possible improvements:
+* Some sort of lazy loading like Paging3. (Though spoonacular's free plan is a bit restrictive)
 * Add a useCases class to stand between the ViewModel and the `RecipeRepository`, so that other future parts of the app can access the same functionality without having to duplicate all the logic from the `SearchViewModel`.
 * Better support for landscape mode.
 * More Compose Animations. Or [Lottie animations](http://airbnb.io/lottie/#/community-showcase).
 * Show more info for each recipe card in the results list (cooking time, diets, cuisine, etc).
 * An "Advanced Search" that can take advantage of the large array of search options the API has available.
-* Paging3 to lazy load more results. (Though spoonacular's free plan is a bit restrictive)
 * Auto-complete search options.
 * Integration testing.
 
