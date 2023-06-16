@@ -47,7 +47,8 @@ Adding new features(flows) can be easily achieved by adding a new package next t
 
 **App architecture graph:**
 
-<img width="822" alt="image" src="https://github.com/codrut-topliceanu/TastyTrails/assets/60002907/727e2ae3-d7c2-435e-a1ba-119e102071d7">
+
+<img width="826" alt="Screenshot 2023-06-16 at 09 57 42" src="https://github.com/codrut-topliceanu/TastyTrails/assets/60002907/9ce23d8f-8667-4319-9cb0-10b07560d854">
 
 
 
