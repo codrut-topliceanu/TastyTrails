@@ -2,7 +2,7 @@
 
 
 
-**Tasty trails** is a simple app designed to search for and display recipes from spoonacular.com.
+**Tasty trails** is a simple demo app designed to search for and display recipes from spoonacular.com.
 
 _A minimum of Android 10 is required for this app._ 
 
