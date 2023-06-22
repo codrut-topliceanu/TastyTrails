@@ -1,6 +1,7 @@
 package com.example.tastytrails.main.data.remote
 
 import com.example.tastytrails.BuildConfig
+import com.example.tastytrails.main.data.repository.MAX_RESULTS_PER_SEARCH
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Headers
@@ -20,7 +21,8 @@ interface RecipesApi {
     @GET("complexSearch")
     suspend fun getRecipesByName(
         @Query("query") recipeNames: String?,
-        @Query("number") resultsNumber: Int = 5,
+        @Query("number") resultsNumber: Int = MAX_RESULTS_PER_SEARCH,
+        @Query("offset") offset: Int = 0,
         @Query("includeIngredients") includeIngredients: String? = null,
         @Query("fillIngredients") fillIngredients: Boolean = false,
         @Query("addRecipeInformation") addRecipeInformation: Boolean = false,

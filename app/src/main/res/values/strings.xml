@@ -7,6 +7,7 @@
     <string name="sort_by_a_z">A-Z</string>
     <string name="sort_by_z_a">Z-A</string>
     <string name="sort_by_health_score">Healthiest</string>
+    <string name="sort_by_none">None</string>
     <string name="dish_name_examples">pasta, burgers, meatballs…</string>
     <string name="ingredients_examples">tomatoes, flour, onion…</string>
     <string name="cd_search_button">Search button</string>
@@ -29,6 +30,7 @@
     <string name="no_description_available_error">No description available.</string>
     <string name="error_search_recipe">Server isn\'t done cooking, try again later</string>
     <string name="error_search_recipe_empty_search">Couldn\'t find anything tasty down that trail. :(</string>
+    <string name="error_search_recipe_empty_search_with_offset">Couldn\'t find more tasty recipes.</string>
     <string name="error_search_recipe_exception">Something didn\'t go right, try again later please.</string>
     <string name="error_upser_exception">Stubborn snack! There was an error saving the item, apologies.</string>
     <string name="error_get_recipes_exception">Apologies, couldn\'t get the requested snack list. Try a sandwich instead?</string>
@@ -39,5 +41,6 @@
     <string name="dynamic_theme">Dynamic Theme</string>
     <string name="dynamic_theme_on">On</string>
     <string name="dynamic_theme_off">Off</string>
+    <string name="load_more_results">Load more results</string>
 
 </resources>
