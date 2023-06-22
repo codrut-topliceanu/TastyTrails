@@ -22,6 +22,7 @@ It's build around an MVVM architecture using the following techstack:
 ### App features:
  * Search for recipes by name or ingredient
  * Results displayed in a LazyColumn displaying name, summary, image and health score.
+ * Ability to load more search results (pagination, 10 per call)
  * Ability to switch between current results, previously viewed(cached) and favorites lists.
  * Ability to sort the list alphabetically or by health score.
  * See details about each recipe such as image, name, health score, full summary, ingredients, instructions, link to source url. And ability to mark a recipe as favorite.
@@ -74,6 +75,8 @@ Adding new features(flows) can be easily achieved by adding a new package next t
 
 
 
-https://github.com/codrut-topliceanu/TastyTrails/assets/60002907/882d2df1-63d0-41e9-9bd9-e259d7f7c1cd
+
+https://github.com/codrut-topliceanu/TastyTrails/assets/60002907/05e7ddc6-0d0d-46c2-ad12-b828fe6b87a8
+
 
 
