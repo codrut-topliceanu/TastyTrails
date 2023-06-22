@@ -12,6 +12,8 @@ import com.example.tastytrails.main.domain.RecipeRepository
 import com.example.tastytrails.utils.RepoResult
 import javax.inject.Inject
 
+const val MAX_RESULTS_PER_SEARCH = 10
+
 class RecipeRepositoryImpl @Inject constructor(
     private val recipesApi: RecipesApi,
     private val recipeDao: RecipeDao,
@@ -20,13 +22,15 @@ class RecipeRepositoryImpl @Inject constructor(
 
     override suspend fun searchForRecipes(
         query: String,
-        searchByName: Boolean
+        searchByName: Boolean,
+        resultsOffset: Int
     ): RepoResult<List<Recipe>> {
         try {
             val response = recipesApi.getRecipesByName(
                 recipeNames = if (searchByName) query else null,
                 includeIngredients = if (searchByName) null else query,
-                resultsNumber = 10,
+                resultsNumber = MAX_RESULTS_PER_SEARCH,
+                offset = resultsOffset,
                 fillIngredients = true,
                 addRecipeInformation = true,
             )
@@ -41,7 +45,11 @@ class RecipeRepositoryImpl @Inject constructor(
             val result = response.body()?.results?.map { it.toRecipe() }
 
             return if (result.isNullOrEmpty()) {
-                RepoResult.Error(context.getString(R.string.error_search_recipe_empty_search))
+                RepoResult.Error(
+                    if (resultsOffset == 0) context.getString(R.string.error_search_recipe_empty_search)
+                    else context.getString(R.string.error_search_recipe_empty_search_with_offset)
+
+                )
             } else {
                 RepoResult.Success(result)
             }

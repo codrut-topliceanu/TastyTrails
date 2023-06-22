@@ -1,5 +1,6 @@
 package com.example.tastytrails.main.ui
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,6 +15,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -47,6 +49,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.tastytrails.R
 import com.example.tastytrails.datastore.ThemeSettings
+import com.example.tastytrails.main.data.repository.MAX_RESULTS_PER_SEARCH
 import com.example.tastytrails.main.domain.Recipe
 import com.example.tastytrails.main.ui.components.RecipeCard
 import com.example.tastytrails.main.ui.components.TastySnackBar
@@ -120,7 +123,7 @@ fun SearchScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             SearchHeader(
-                viewModel = searchViewModel,
+                searchViewModel = searchViewModel,
                 viewState = viewState,
                 isQueryValid = isQueryValid
             )
@@ -172,6 +175,33 @@ fun SearchScreen(
                         )
                     }
                 )
+                item {
+                    AnimatedVisibility(shouldShowLoadMoreButton(viewState)) {
+                        AssistChip(modifier = Modifier.padding(15.dp),
+                            onClick = {
+                                searchViewModel.executeOnlineSearch(true)
+                            },
+                            enabled = !viewState.inProgress,
+                            leadingIcon = {
+                                Image(
+                                    modifier = Modifier.height(20.dp),
+                                    painter = painterResource(id = R.drawable.search_icon),
+                                    contentDescription = "",
+                                    contentScale = ContentScale.Inside,
+                                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onPrimaryContainer)
+                                )
+                            },
+                            label = {
+                                Text(
+                                    text = stringResource(R.string.load_more_results),
+                                    style = MaterialTheme.typography.labelSmall
+
+                                )
+                            }
+                        )
+
+                    }
+                }
             }
             Row(
                 modifier = Modifier.padding(bottom = 5.dp),
@@ -179,6 +209,11 @@ fun SearchScreen(
             )
         }
     }
+}
+
+private fun shouldShowLoadMoreButton(viewState: SearchScreenUiState): Boolean {
+    return viewState.resultsOffset >= MAX_RESULTS_PER_SEARCH &&
+            viewState.listDisplayMode == ListDisplayMode.CURRENT_SEARCH
 }
 
 /**
@@ -189,13 +224,13 @@ fun SearchScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 private fun listDisplayModeChips(
     viewState: SearchScreenUiState,
-    viewModel: SearchViewModel
+    searchViewModel: SearchViewModel
 ): @Composable (RowScope.() -> Unit) =
     {
         FilterChip(
             selected = viewState.listDisplayMode == ListDisplayMode.CURRENT_SEARCH,
             onClick = {
-                viewModel.executeChangeList(ListDisplayMode.CURRENT_SEARCH)
+                searchViewModel.executeChangeList(ListDisplayMode.CURRENT_SEARCH)
             },
             enabled = !viewState.inProgress,
             label = {
@@ -209,7 +244,7 @@ private fun listDisplayModeChips(
             modifier = Modifier.padding(start = 5.dp, end = 5.dp),
             selected = viewState.listDisplayMode == ListDisplayMode.PREVIOUSLY_VIEWED,
             onClick = {
-                viewModel.executeChangeList(ListDisplayMode.PREVIOUSLY_VIEWED)
+                searchViewModel.executeChangeList(ListDisplayMode.PREVIOUSLY_VIEWED)
             },
             enabled = !viewState.inProgress,
             label = {
@@ -222,7 +257,7 @@ private fun listDisplayModeChips(
         FilterChip(
             selected = viewState.listDisplayMode == ListDisplayMode.FAVORITES,
             onClick = {
-                viewModel.executeChangeList(ListDisplayMode.FAVORITES)
+                searchViewModel.executeChangeList(ListDisplayMode.FAVORITES)
             },
             enabled = !viewState.inProgress,
             label = {
@@ -401,6 +436,25 @@ private fun setupTopBarActions(
                 text = stringResource(R.string.filter_by)
             )
             DropdownMenuItem(
+                text = { Text(text = stringResource(R.string.sort_by_none)) },
+                onClick = {
+                    searchViewModel.updateSearchScreenUiState(
+                        SearchScreenStateAction.UpdateCurrentSort(FilterOptions.NONE)
+                    )
+                    contextMenuVisible.value = false
+                },
+                leadingIcon = {
+                    if (currentSort == FilterOptions.NONE) {
+                        Image(
+                            painter = painterResource(id = R.drawable.check),
+                            contentDescription = stringResource(R.string.cd_checked),
+                            contentScale = ContentScale.Inside,
+                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary),
+                        )
+                    }
+                }
+            )
+            DropdownMenuItem(
                 text = { Text(text = stringResource(R.string.sort_by_a_z)) },
                 onClick = {
                     searchViewModel.updateSearchScreenUiState(
@@ -458,7 +512,6 @@ private fun setupTopBarActions(
                     }
                 }
             )
-
         }
     }
 
@@ -469,7 +522,7 @@ private fun setupTopBarActions(
 @Composable
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 fun SearchHeader(
-    viewModel: SearchViewModel,
+    searchViewModel: SearchViewModel,
     viewState: SearchScreenUiState,
     isQueryValid: MutableState<Boolean>
 ) {
@@ -481,7 +534,7 @@ fun SearchHeader(
             isQueryValid.value =
                 newValue.matches(Regex("^([a-zA-Z0-9-]+,?+\\s?)+\$"))
 
-            viewModel.updateSearchScreenUiState(
+            searchViewModel.updateSearchScreenUiState(
                 SearchScreenStateAction.UpdateSearchQuery(
                     newValue
                 )
@@ -513,10 +566,10 @@ fun SearchHeader(
         keyboardActions = KeyboardActions(
             onDone = {
                 if (!viewState.inProgress && isQueryValid.value) {
-                    viewModel.updateSearchScreenUiState(
+                    searchViewModel.updateSearchScreenUiState(
                         SearchScreenStateAction.UpdateListDisplayMode(ListDisplayMode.CURRENT_SEARCH)
                     )
-                    viewModel.executeOnlineSearch()
+                    searchViewModel.executeOnlineSearch()
                     keyboardController?.hide()
                 }
             }
@@ -527,10 +580,10 @@ fun SearchHeader(
                     .height(50.dp)
                     .width(50.dp)
                     .unboundedRippleClickable(enabled = !viewState.inProgress && isQueryValid.value) {
-                        viewModel.updateSearchScreenUiState(
+                        searchViewModel.updateSearchScreenUiState(
                             SearchScreenStateAction.UpdateListDisplayMode(ListDisplayMode.CURRENT_SEARCH)
                         )
-                        viewModel.executeOnlineSearch()
+                        searchViewModel.executeOnlineSearch()
                         keyboardController?.hide()
                     },
                 painter = painterResource(id = R.drawable.search_icon),
@@ -551,7 +604,7 @@ fun SearchHeader(
         FilterChip(
             selected = viewState.searchByName,
             onClick = {
-                viewModel.updateSearchScreenUiState(
+                searchViewModel.updateSearchScreenUiState(
                     SearchScreenStateAction.UpdateSearchByName(true)
                 )
             },
@@ -572,7 +625,7 @@ fun SearchHeader(
         FilterChip(
             selected = !viewState.searchByName,
             onClick = {
-                viewModel.updateSearchScreenUiState(
+                searchViewModel.updateSearchScreenUiState(
                     SearchScreenStateAction.UpdateSearchByName(false)
                 )
             },

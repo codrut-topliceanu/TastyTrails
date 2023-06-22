@@ -24,7 +24,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-@HiltViewModel()
+@HiltViewModel
 class SearchViewModel @Inject constructor(
     private val repository: RecipeRepository,
     private val dataStore: DataStore<Preferences>
@@ -58,8 +58,9 @@ class SearchViewModel @Inject constructor(
     /**
      * Executes a web call to search for the searchQuery, shows user a message if an error happened.
      * Then updates ui state with the results returned from the API call.
+     * @param loadMore if the call should use [SearchScreenUiState.resultsOffset] to load more results
      */
-    fun executeOnlineSearch() {
+    fun executeOnlineSearch(loadMore: Boolean = false) {
         // No need to make a call if we don't have any search queries
         if (_searchScreenUiState.value.searchQuery.isBlank()) {
             SearchScreenStateAction.AddToSnackBarMessages(
@@ -77,8 +78,13 @@ class SearchViewModel @Inject constructor(
             // Call server
             when (val repoResult =
                 repository.searchForRecipes(
-                    _searchScreenUiState.value.searchQuery.trim(),
-                    _searchScreenUiState.value.searchByName
+                    query = _searchScreenUiState.value.searchQuery.trim(),
+                    searchByName = _searchScreenUiState.value.searchByName,
+                    resultsOffset = if (loadMore
+                        && _searchScreenUiState.value.listDisplayMode == ListDisplayMode.CURRENT_SEARCH
+                    ) {
+                        _searchScreenUiState.value.resultsOffset
+                    } else 0
                 )) {
                 is RepoResult.Error -> {
                     repoResult.message?.let {
@@ -94,13 +100,21 @@ class SearchViewModel @Inject constructor(
                 is RepoResult.Success -> {
                     repoResult.data?.let { newList ->
                         // Update list with results
-                        updateSearchScreenUiState(
-                            SearchScreenStateAction.UpdateRecipesListWithSort(
-                                newList,
-                                _searchScreenUiState.value.currentSort
+                        if (loadMore && _searchScreenUiState.value.listDisplayMode == ListDisplayMode.CURRENT_SEARCH) {
+                            updateSearchScreenUiState(
+                                SearchScreenStateAction.UpdateRecipesListWithSort(
+                                    _searchScreenUiState.value.recipesList + newList,
+                                    _searchScreenUiState.value.currentSort
+                                )
                             )
-                        )
-
+                        } else {
+                            updateSearchScreenUiState(
+                                SearchScreenStateAction.UpdateRecipesListWithSort(
+                                    newList,
+                                    _searchScreenUiState.value.currentSort
+                                )
+                            )
+                        }
                         previousSearchResults = _searchScreenUiState.value.recipesList
 
                         // Switch list to results search
@@ -145,13 +159,35 @@ class SearchViewModel @Inject constructor(
                     SearchScreenStateAction.UpdateCurrentlySelectedRecipe
                         (recipeToSave)
                 )
-                /*  If the user un-favorites a recipe, we should remove it from the current displayed list
-                *  if that list is Favorites(safety check, not really necessary)*/
-                if (!favorite && state.value.listDisplayMode == ListDisplayMode.FAVORITES) {
+                /* If the user un-favorites a recipe, we should remove it from the current displayed list
+                *   if that list is Favorites */
+                if (!favorite && _searchScreenUiState.value.listDisplayMode == ListDisplayMode.FAVORITES) {
                     updateSearchScreenUiState(
                         SearchScreenStateAction.UpdateRecipesListWithSort
-                            (state.value.recipesList.minus(recipe), state.value.currentSort)
+                            (
+                            _searchScreenUiState.value.recipesList.minus(recipe),
+                            state.value.currentSort
+                        )
                     )
+                } else {
+                    // Update list to reflect the recipe's favorite state
+                    updateSearchScreenUiState(
+                        SearchScreenStateAction.UpdateRecipesListWithSort(
+                            recipesList = _searchScreenUiState.value.recipesList.map { oldRecipe ->
+                                if (oldRecipe.id == recipeToSave.id)
+                                    recipeToSave
+                                else oldRecipe
+                            },
+                            currentSort = _searchScreenUiState.value.currentSort
+                        )
+                    )
+                }
+
+                // Update previous search result as well (in case the user was in a different display mode)
+                previousSearchResults = previousSearchResults.map { oldRecipe ->
+                    if (oldRecipe.id == recipeToSave.id)
+                        recipeToSave
+                    else oldRecipe
                 }
             } else {
                 repoResult.message?.let { message ->
@@ -166,7 +202,7 @@ class SearchViewModel @Inject constructor(
     }
 
     /**
-     * Switches the currently displayed list of results: [ListDisplayMode]
+     * Switches the currently displayed list of results: [ListDisplayMode].
      */
     fun executeChangeList(switchTo: ListDisplayMode) {
         // This shouldn't be needed, but it's safer to check anyway.
@@ -234,14 +270,13 @@ class SearchViewModel @Inject constructor(
                             )
                         }
                     }
-
                 }
             }
         }
     }
 
     /**
-     * Saves to the dataStore the new [ThemeSettings]
+     * Saves to the dataStore the new [ThemeSettings].
      */
     fun executeUpdateThemeSettings(themeSettings: ThemeSettings) {
         viewModelScope.launch(Dispatchers.IO) {

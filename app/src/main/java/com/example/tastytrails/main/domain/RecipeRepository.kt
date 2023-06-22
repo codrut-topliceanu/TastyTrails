@@ -4,7 +4,11 @@ import com.example.tastytrails.utils.RepoResult
 
 interface RecipeRepository {
 
-    suspend fun searchForRecipes(query: String, searchByName: Boolean): RepoResult<List<Recipe>>
+    suspend fun searchForRecipes(
+        query: String,
+        searchByName: Boolean = true,
+        resultsOffset: Int = 0
+    ): RepoResult<List<Recipe>>
 
     suspend fun getRecipesByPreviouslyViewed(previouslyViewed: Boolean): RepoResult<List<Recipe>>
 

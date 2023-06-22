@@ -18,7 +18,8 @@ enum class ListDisplayMode {
 enum class FilterOptions {
     A_Z,
     Z_A,
-    HEALTH_SCORE
+    HEALTH_SCORE,
+    NONE
 }
 
 /**
@@ -36,9 +37,10 @@ data class SearchScreenUiState(
     val inProgress: Boolean = false,
     val searchQuery: String = "",
     val searchByName: Boolean = true,
-    val currentSort: FilterOptions = FilterOptions.A_Z,
+    val currentSort: FilterOptions = FilterOptions.NONE,
     val listDisplayMode: ListDisplayMode = ListDisplayMode.CURRENT_SEARCH,
     val recipesList: List<Recipe> = listOf(),
+    val resultsOffset: Int = 0,
     val currentlySelectedRecipe: Recipe? = null,
     val snackBarMessages: List<SnackBarMessage> = listOf()
 )
@@ -60,9 +62,14 @@ interface StateAction<T : Any> {
  */
 sealed class SearchScreenStateAction : StateAction<SearchScreenUiState> {
 
+    /**
+     * Updates the search query AND resets the [SearchScreenUiState.resultsOffset]
+     * so that LoadMore button doesn't mistakenly search for more results with a different
+     * query.
+     */
     data class UpdateSearchQuery(val searchQuery: String) : SearchScreenStateAction() {
         override fun updateState(state: SearchScreenUiState): SearchScreenUiState =
-            state.copy(searchQuery = searchQuery)
+            state.copy(searchQuery = searchQuery, resultsOffset = 0)
     }
 
     data class UpdateShowInProgress(val showLoading: Boolean) : SearchScreenStateAction() {
@@ -71,11 +78,13 @@ sealed class SearchScreenStateAction : StateAction<SearchScreenUiState> {
     }
 
     /**
-     * Updates the [searchByName] value AND deletes the current searchQuery.
+     * Updates the [searchByName] value and deletes the current searchQuery, while also
+     * resetting [SearchScreenUiState.resultsOffset] so that LoadMore doesn't try to do a
+     * search with different query parameters.
      */
     data class UpdateSearchByName(val searchByName: Boolean) : SearchScreenStateAction() {
         override fun updateState(state: SearchScreenUiState): SearchScreenUiState =
-            state.copy(searchByName = searchByName, searchQuery = "")
+            state.copy(searchByName = searchByName, searchQuery = "", resultsOffset = 0)
     }
 
     /**
@@ -95,10 +104,19 @@ sealed class SearchScreenStateAction : StateAction<SearchScreenUiState> {
                 FilterOptions.HEALTH_SCORE -> state.copy(
                     currentSort = currentSort,
                     recipesList = state.recipesList.sortedByDescending { it.healthScore })
+
+                FilterOptions.NONE -> state.copy(
+                    currentSort = currentSort,
+                    recipesList = state.recipesList
+                )
             }
         }
     }
 
+    /**
+     * Updates the list of recipes while also sorting them,
+     * and updates [SearchScreenUiState.resultsOffset] to be equal to the current list size.
+     */
     data class UpdateRecipesListWithSort(
         val recipesList: List<Recipe>,
         val currentSort: FilterOptions
@@ -107,15 +125,24 @@ sealed class SearchScreenStateAction : StateAction<SearchScreenUiState> {
             return when (currentSort) {
                 FilterOptions.A_Z -> state.copy(
                     currentSort = currentSort,
-                    recipesList = recipesList.sortedBy { it.title })
+                    recipesList = recipesList.sortedBy { it.title },
+                    resultsOffset = recipesList.size)
 
                 FilterOptions.Z_A -> state.copy(
                     currentSort = currentSort,
-                    recipesList = recipesList.sortedByDescending { it.title })
+                    recipesList = recipesList.sortedByDescending { it.title },
+                    resultsOffset = recipesList.size)
 
                 FilterOptions.HEALTH_SCORE -> state.copy(
                     currentSort = currentSort,
-                    recipesList = recipesList.sortedByDescending { it.healthScore })
+                    recipesList = recipesList.sortedByDescending { it.healthScore },
+                    resultsOffset = recipesList.size)
+
+                FilterOptions.NONE -> state.copy(
+                    currentSort = currentSort,
+                    recipesList = recipesList,
+                    resultsOffset = recipesList.size
+                )
             }
         }
 

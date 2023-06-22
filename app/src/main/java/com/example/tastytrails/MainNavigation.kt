@@ -25,14 +25,15 @@ private object MainDestinations {
     const val RECIPE_DETAILS_SCREEN = "recipe_details"
 }
 
-
-
 @Composable
 fun MainNavigation(
     navController: NavHostController = rememberNavController(),
     themeSettingsFlow: Flow<ThemeSettings>
 ) {
 
+    /**
+     * Tracks app theming: dark/light mode and dynamic theme
+     */
     val themeSettingsState by themeSettingsFlow.collectAsStateWithLifecycle(ThemeSettings())
 
     TastyTrailsTheme(themeSettingsState) {
