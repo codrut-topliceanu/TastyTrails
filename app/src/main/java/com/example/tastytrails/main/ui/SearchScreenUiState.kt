@@ -47,7 +47,8 @@ data class SearchScreenUiState(
 
 data class SnackBarMessage(
     val id: Int = Random.nextInt(),
-    val message: String
+    val message: String = "",
+    val messageStringId: Int? = null
 )
 
 /**

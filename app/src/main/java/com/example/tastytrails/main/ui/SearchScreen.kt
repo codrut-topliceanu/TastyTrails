@@ -41,6 +41,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -51,6 +52,7 @@ import com.example.tastytrails.R
 import com.example.tastytrails.datastore.ThemeSettings
 import com.example.tastytrails.main.data.repository.MAX_RESULTS_PER_SEARCH
 import com.example.tastytrails.main.domain.Recipe
+import com.example.tastytrails.main.ui.SearchScreenStateAction.*
 import com.example.tastytrails.main.ui.components.RecipeCard
 import com.example.tastytrails.main.ui.components.TastySnackBar
 import com.example.tastytrails.utils.unboundedRippleClickable
@@ -66,15 +68,19 @@ fun SearchScreen(
     val contextMenuVisible = rememberSaveable { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val isQueryValid = rememberSaveable { mutableStateOf(true) }
+    val localContext = LocalContext.current
 
     // Consumes the first snackBarMessage in list, recomposes when messages size changes.
     LaunchedEffect(key1 = viewState.snackBarMessages.size) {
         viewState.snackBarMessages.firstOrNull()?.let { snackBarMessage ->
-            snackbarHostState.showSnackbar(snackBarMessage.message)
-            searchViewModel.updateSearchScreenUiState(
-                SearchScreenStateAction.RemoveFromSnackBarMessages(
-                    snackBarMessage
-                )
+
+            searchViewModel.getSnackBarMsg(
+                localContext = localContext,
+                snackBarMessage = snackBarMessage
+            )?.let { snackbarHostState.showSnackbar(it) }
+
+            searchViewModel.updateUiState(
+                RemoveFromSnackBarMessages(snackBarMessage)
             )
         }
     }
@@ -166,8 +172,8 @@ fun SearchScreen(
                             recipe = item,
                             onRecipeClicked = {
                                 searchViewModel.executeSaveViewedRecipe(item)
-                                searchViewModel.updateSearchScreenUiState(
-                                    SearchScreenStateAction.UpdateCurrentlySelectedRecipe
+                                searchViewModel.updateUiState(
+                                    UpdateCurrentlySelectedRecipe
                                         (item)
                                 )
                                 onRecipeClicked()
@@ -438,8 +444,8 @@ private fun setupTopBarActions(
             DropdownMenuItem(
                 text = { Text(text = stringResource(R.string.sort_by_none)) },
                 onClick = {
-                    searchViewModel.updateSearchScreenUiState(
-                        SearchScreenStateAction.UpdateCurrentSort(FilterOptions.NONE)
+                    searchViewModel.updateUiState(
+                        UpdateCurrentSort(FilterOptions.NONE)
                     )
                     contextMenuVisible.value = false
                 },
@@ -457,8 +463,8 @@ private fun setupTopBarActions(
             DropdownMenuItem(
                 text = { Text(text = stringResource(R.string.sort_by_a_z)) },
                 onClick = {
-                    searchViewModel.updateSearchScreenUiState(
-                        SearchScreenStateAction.UpdateCurrentSort(FilterOptions.A_Z)
+                    searchViewModel.updateUiState(
+                        UpdateCurrentSort(FilterOptions.A_Z)
                     )
                     contextMenuVisible.value = false
                 },
@@ -476,8 +482,8 @@ private fun setupTopBarActions(
             DropdownMenuItem(
                 text = { Text(text = stringResource(R.string.sort_by_z_a)) },
                 onClick = {
-                    searchViewModel.updateSearchScreenUiState(
-                        SearchScreenStateAction.UpdateCurrentSort(FilterOptions.Z_A)
+                    searchViewModel.updateUiState(
+                        UpdateCurrentSort(FilterOptions.Z_A)
                     )
 
                     contextMenuVisible.value = false
@@ -496,8 +502,8 @@ private fun setupTopBarActions(
             DropdownMenuItem(
                 text = { Text(text = stringResource(R.string.sort_by_health_score)) },
                 onClick = {
-                    searchViewModel.updateSearchScreenUiState(
-                        SearchScreenStateAction.UpdateCurrentSort(FilterOptions.HEALTH_SCORE)
+                    searchViewModel.updateUiState(
+                        UpdateCurrentSort(FilterOptions.HEALTH_SCORE)
                     )
                     contextMenuVisible.value = false
                 },
@@ -532,10 +538,10 @@ fun SearchHeader(
         value = viewState.searchQuery,
         onValueChange = { newValue: String ->
             isQueryValid.value =
-                newValue.matches(Regex("^([a-zA-Z0-9-]+,?+\\s?)+\$"))
+                filterSearchInput(newValue)
 
-            searchViewModel.updateSearchScreenUiState(
-                SearchScreenStateAction.UpdateSearchQuery(
+            searchViewModel.updateUiState(
+                UpdateSearchQuery(
                     newValue
                 )
             )
@@ -566,8 +572,8 @@ fun SearchHeader(
         keyboardActions = KeyboardActions(
             onDone = {
                 if (!viewState.inProgress && isQueryValid.value) {
-                    searchViewModel.updateSearchScreenUiState(
-                        SearchScreenStateAction.UpdateListDisplayMode(ListDisplayMode.CURRENT_SEARCH)
+                    searchViewModel.updateUiState(
+                        UpdateListDisplayMode(ListDisplayMode.CURRENT_SEARCH)
                     )
                     searchViewModel.executeOnlineSearch()
                     keyboardController?.hide()
@@ -580,8 +586,8 @@ fun SearchHeader(
                     .height(50.dp)
                     .width(50.dp)
                     .unboundedRippleClickable(enabled = !viewState.inProgress && isQueryValid.value) {
-                        searchViewModel.updateSearchScreenUiState(
-                            SearchScreenStateAction.UpdateListDisplayMode(ListDisplayMode.CURRENT_SEARCH)
+                        searchViewModel.updateUiState(
+                            UpdateListDisplayMode(ListDisplayMode.CURRENT_SEARCH)
                         )
                         searchViewModel.executeOnlineSearch()
                         keyboardController?.hide()
@@ -604,8 +610,8 @@ fun SearchHeader(
         FilterChip(
             selected = viewState.searchByName,
             onClick = {
-                searchViewModel.updateSearchScreenUiState(
-                    SearchScreenStateAction.UpdateSearchByName(true)
+                searchViewModel.updateUiState(
+                    UpdateSearchByName(true)
                 )
             },
             enabled = !viewState.inProgress,
@@ -625,8 +631,8 @@ fun SearchHeader(
         FilterChip(
             selected = !viewState.searchByName,
             onClick = {
-                searchViewModel.updateSearchScreenUiState(
-                    SearchScreenStateAction.UpdateSearchByName(false)
+                searchViewModel.updateUiState(
+                    UpdateSearchByName(false)
                 )
             },
             enabled = !viewState.inProgress,

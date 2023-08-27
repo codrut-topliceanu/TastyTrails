@@ -20,9 +20,11 @@ import com.example.tastytrails.main.ui.SearchViewModel
 import com.example.tastytrails.ui.theme.TastyTrailsTheme
 import kotlinx.coroutines.flow.Flow
 
-private object MainDestinations {
-    const val SEARCH_SCREEN = "search"
-    const val RECIPE_DETAILS_SCREEN = "recipe_details"
+sealed class AppFeatures {
+    sealed class Search(val route: String) {
+        object SearchScreen : Search("search_screen")
+        object RecipeDetailsScreen : Search("recipe_details_screen")
+    }
 }
 
 @Composable
@@ -39,23 +41,23 @@ fun MainNavigation(
     TastyTrailsTheme(themeSettingsState) {
         NavHost(
             navController = navController,
-            startDestination = "searchFeature"
+            startDestination = AppFeatures.Search::javaClass.name
         ) {
             // Navigation of the main feature: Search Screen
             navigation(
-                startDestination = MainDestinations.SEARCH_SCREEN,
-                route = "searchFeature"
+                startDestination = AppFeatures.Search.SearchScreen.route,
+                route = AppFeatures.Search::javaClass.name
             ) {
 
-                composable(MainDestinations.SEARCH_SCREEN) {
+                composable(AppFeatures.Search.SearchScreen.route) {
                     val searchViewModel = it.sharedViewModel<SearchViewModel>(navController)
                     SearchScreen(
                         searchViewModel = searchViewModel,
-                        onRecipeClicked = { navController.navigate(MainDestinations.RECIPE_DETAILS_SCREEN) }
+                        onRecipeClicked = { navController.navigate(AppFeatures.Search.RecipeDetailsScreen.route) }
                     )
                 }
 
-                composable(MainDestinations.RECIPE_DETAILS_SCREEN) {
+                composable(AppFeatures.Search.RecipeDetailsScreen.route) {
                     val viewModel = it.sharedViewModel<SearchViewModel>(navController)
                     RecipeDetailScreen(viewModel = viewModel) { navController.popBackStack() }
                 }

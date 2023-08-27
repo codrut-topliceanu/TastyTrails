@@ -1,5 +1,6 @@
 package com.example.tastytrails.main.ui
 
+import android.content.Context
 import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
@@ -7,10 +8,15 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.tastytrails.R
 import com.example.tastytrails.datastore.PreferencesKeys
 import com.example.tastytrails.datastore.ThemeSettings
 import com.example.tastytrails.main.domain.Recipe
 import com.example.tastytrails.main.domain.RecipeRepository
+import com.example.tastytrails.main.ui.SearchScreenStateAction.AddToSnackBarMessages
+import com.example.tastytrails.main.ui.SearchScreenStateAction.UpdateListDisplayMode
+import com.example.tastytrails.main.ui.SearchScreenStateAction.UpdateRecipesListWithSort
+import com.example.tastytrails.main.ui.SearchScreenStateAction.UpdateShowInProgress
 import com.example.tastytrails.utils.RepoResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -62,9 +68,11 @@ class SearchViewModel @Inject constructor(
      */
     fun executeOnlineSearch(loadMore: Boolean = false) {
         // No need to make a call if we don't have any search queries
-        if (_searchScreenUiState.value.searchQuery.isBlank()) {
-            SearchScreenStateAction.AddToSnackBarMessages(
-                listOf(SnackBarMessage(message = "Try typing in something delicious."))
+        if (state.value.searchQuery.isBlank()) {
+            updateUiState(
+                AddToSnackBarMessages(
+                    listOf(SnackBarMessage(messageStringId = R.string.empty_query_msg))
+                )
             )
             return
         }
@@ -73,7 +81,7 @@ class SearchViewModel @Inject constructor(
             previousSearchResults = listOf()
 
             // Show progress indicator
-            updateSearchScreenUiState(SearchScreenStateAction.UpdateShowInProgress(true))
+            updateUiState(UpdateShowInProgress(true))
 
             // Call server
             when (val repoResult =
@@ -89,8 +97,8 @@ class SearchViewModel @Inject constructor(
                 is RepoResult.Error -> {
                     repoResult.message?.let {
                         // Print msg to user with error
-                        updateSearchScreenUiState(
-                            SearchScreenStateAction.AddToSnackBarMessages(
+                        updateUiState(
+                            AddToSnackBarMessages(
                                 listOf(SnackBarMessage(message = repoResult.message))
                             )
                         )
@@ -101,33 +109,32 @@ class SearchViewModel @Inject constructor(
                     repoResult.data?.let { newList ->
                         // Update list with results
                         if (loadMore && _searchScreenUiState.value.listDisplayMode == ListDisplayMode.CURRENT_SEARCH) {
-                            updateSearchScreenUiState(
-                                SearchScreenStateAction.UpdateRecipesListWithSort(
-                                    _searchScreenUiState.value.recipesList + newList,
-                                    _searchScreenUiState.value.currentSort
+                            updateUiState(
+                                UpdateRecipesListWithSort(
+                                    recipesList = _searchScreenUiState.value.recipesList + newList,
+                                    currentSort = _searchScreenUiState.value.currentSort
                                 )
                             )
                         } else {
-                            updateSearchScreenUiState(
-                                SearchScreenStateAction.UpdateRecipesListWithSort(
-                                    newList,
-                                    _searchScreenUiState.value.currentSort
+                            updateUiState(
+                                UpdateRecipesListWithSort(
+                                    recipesList = newList,
+                                    currentSort = _searchScreenUiState.value.currentSort
                                 )
                             )
                         }
                         previousSearchResults = _searchScreenUiState.value.recipesList
 
                         // Switch list to results search
-                        updateSearchScreenUiState(
-                            SearchScreenStateAction
-                                .UpdateListDisplayMode(ListDisplayMode.CURRENT_SEARCH)
+                        updateUiState(
+                            UpdateListDisplayMode(ListDisplayMode.CURRENT_SEARCH)
                         )
                     }
                 }
             }
 
             // Hide progress indicator
-            updateSearchScreenUiState(SearchScreenStateAction.UpdateShowInProgress(false))
+            updateUiState(UpdateShowInProgress(false))
         }
     }
 
@@ -139,7 +146,7 @@ class SearchViewModel @Inject constructor(
             val recipeToSave = recipe.copy(previouslyViewed = true)
             val repoResult = repository.upsertRecipe(recipeToSave)
             if (repoResult is RepoResult.Success) {
-                updateSearchScreenUiState(
+                updateUiState(
                     SearchScreenStateAction.UpdateCurrentlySelectedRecipe
                         (recipeToSave)
                 )
@@ -155,14 +162,14 @@ class SearchViewModel @Inject constructor(
             val recipeToSave = recipe.copy(favorite = favorite)
             val repoResult = repository.upsertRecipe(recipeToSave)
             if (repoResult is RepoResult.Success) {
-                updateSearchScreenUiState(
+                updateUiState(
                     SearchScreenStateAction.UpdateCurrentlySelectedRecipe
                         (recipeToSave)
                 )
                 /* If the user un-favorites a recipe, we should remove it from the current displayed list
                 *   if that list is Favorites */
                 if (!favorite && _searchScreenUiState.value.listDisplayMode == ListDisplayMode.FAVORITES) {
-                    updateSearchScreenUiState(
+                    updateUiState(
                         SearchScreenStateAction.UpdateRecipesListWithSort
                             (
                             _searchScreenUiState.value.recipesList.minus(recipe),
@@ -171,8 +178,8 @@ class SearchViewModel @Inject constructor(
                     )
                 } else {
                     // Update list to reflect the recipe's favorite state
-                    updateSearchScreenUiState(
-                        SearchScreenStateAction.UpdateRecipesListWithSort(
+                    updateUiState(
+                        UpdateRecipesListWithSort(
                             recipesList = _searchScreenUiState.value.recipesList.map { oldRecipe ->
                                 if (oldRecipe.id == recipeToSave.id)
                                     recipeToSave
@@ -191,8 +198,8 @@ class SearchViewModel @Inject constructor(
                 }
             } else {
                 repoResult.message?.let { message ->
-                    updateSearchScreenUiState(
-                        SearchScreenStateAction.AddToSnackBarMessages(
+                    updateUiState(
+                        AddToSnackBarMessages(
                             listOf(SnackBarMessage(message = message))
                         )
                     )
@@ -211,14 +218,14 @@ class SearchViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             when (switchTo) {
                 ListDisplayMode.CURRENT_SEARCH -> {
-                    updateSearchScreenUiState(
-                        SearchScreenStateAction.UpdateRecipesListWithSort(
+                    updateUiState(
+                        UpdateRecipesListWithSort(
                             previousSearchResults,
                             _searchScreenUiState.value.currentSort
                         )
                     )
-                    updateSearchScreenUiState(
-                        SearchScreenStateAction.UpdateListDisplayMode(switchTo)
+                    updateUiState(
+                        UpdateListDisplayMode(switchTo)
                     )
                 }
 
@@ -226,20 +233,20 @@ class SearchViewModel @Inject constructor(
                     val repoResult = repository.getRecipesByPreviouslyViewed(true)
                     if (repoResult is RepoResult.Success) {
                         repoResult.data?.let {
-                            updateSearchScreenUiState(
-                                SearchScreenStateAction.UpdateRecipesListWithSort(
+                            updateUiState(
+                                UpdateRecipesListWithSort(
                                     it,
                                     _searchScreenUiState.value.currentSort
                                 )
                             )
                         }
-                        updateSearchScreenUiState(
-                            SearchScreenStateAction.UpdateListDisplayMode(switchTo)
+                        updateUiState(
+                            UpdateListDisplayMode(switchTo)
                         )
                     } else {
                         repoResult.message?.let { message ->
-                            updateSearchScreenUiState(
-                                SearchScreenStateAction.AddToSnackBarMessages(
+                            updateUiState(
+                                AddToSnackBarMessages(
                                     listOf(SnackBarMessage(message = message))
                                 )
                             )
@@ -251,22 +258,18 @@ class SearchViewModel @Inject constructor(
                     val repoResult = repository.getRecipesByFavorites(true)
                     if (repoResult is RepoResult.Success) {
                         repoResult.data?.let {
-                            updateSearchScreenUiState(
-                                SearchScreenStateAction.UpdateRecipesListWithSort(
-                                    it,
-                                    _searchScreenUiState.value.currentSort
+                            updateUiState(
+                                UpdateRecipesListWithSort(
+                                    recipesList = it,
+                                    currentSort = _searchScreenUiState.value.currentSort
                                 )
                             )
                         }
-                        updateSearchScreenUiState(
-                            SearchScreenStateAction.UpdateListDisplayMode(switchTo)
-                        )
+                        updateUiState(UpdateListDisplayMode(switchTo))
                     } else {
                         repoResult.message?.let { message ->
-                            updateSearchScreenUiState(
-                                SearchScreenStateAction.AddToSnackBarMessages(
-                                    listOf(SnackBarMessage(message = message))
-                                )
+                            updateUiState(
+                                AddToSnackBarMessages(listOf(SnackBarMessage(message = message)))
                             )
                         }
                     }
@@ -291,9 +294,25 @@ class SearchViewModel @Inject constructor(
     /**
      * Updates the ui state of [SearchScreen].
      */
-    fun updateSearchScreenUiState(action: SearchScreenStateAction) {
+    fun updateUiState(action: SearchScreenStateAction) {
         _searchScreenUiState.update { latest ->
             action.updateState(latest)
         }
     }
+
+    /**
+     * Returns the string of the [snackBarMessage]'s message or messageStringId, or null if none found.
+     */
+    fun getSnackBarMsg(localContext: Context, snackBarMessage: SnackBarMessage): String? {
+        return when {
+            snackBarMessage.message.isNotBlank() -> snackBarMessage.message
+            snackBarMessage.messageStringId != null -> localContext.getString(snackBarMessage.messageStringId)
+            else -> null
+        }
+    }
 }
+
+/**
+ * Filters a string to consist of a list of alphanumeric items separated by commas and optional spaces.
+ */
+fun filterSearchInput(newValue: String) = newValue.matches(Regex("^([a-zA-Z0-9-]+,?+\\s?)+\$"))
