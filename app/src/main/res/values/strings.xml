@@ -42,5 +42,6 @@
     <string name="dynamic_theme_on">On</string>
     <string name="dynamic_theme_off">Off</string>
     <string name="load_more_results">Load more results</string>
+    <string name="empty_query_msg">Try typing in something delicious.</string>
 
 </resources>

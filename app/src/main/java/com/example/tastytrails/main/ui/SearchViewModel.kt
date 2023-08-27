@@ -1,5 +1,6 @@
 package com.example.tastytrails.main.ui
 
+import android.content.Context
 import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
@@ -7,6 +8,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.tastytrails.R
 import com.example.tastytrails.datastore.PreferencesKeys
 import com.example.tastytrails.datastore.ThemeSettings
 import com.example.tastytrails.main.domain.Recipe
@@ -69,7 +71,7 @@ class SearchViewModel @Inject constructor(
         if (state.value.searchQuery.isBlank()) {
             updateUiState(
                 AddToSnackBarMessages(
-                    listOf(SnackBarMessage(message = "Try typing in something delicious."))
+                    listOf(SnackBarMessage(messageStringId = R.string.empty_query_msg))
                 )
             )
             return
@@ -109,15 +111,15 @@ class SearchViewModel @Inject constructor(
                         if (loadMore && _searchScreenUiState.value.listDisplayMode == ListDisplayMode.CURRENT_SEARCH) {
                             updateUiState(
                                 UpdateRecipesListWithSort(
-                                    _searchScreenUiState.value.recipesList + newList,
-                                    _searchScreenUiState.value.currentSort
+                                    recipesList = _searchScreenUiState.value.recipesList + newList,
+                                    currentSort = _searchScreenUiState.value.currentSort
                                 )
                             )
                         } else {
                             updateUiState(
                                 UpdateRecipesListWithSort(
-                                    newList,
-                                    _searchScreenUiState.value.currentSort
+                                    recipesList = newList,
+                                    currentSort = _searchScreenUiState.value.currentSort
                                 )
                             )
                         }
@@ -258,20 +260,16 @@ class SearchViewModel @Inject constructor(
                         repoResult.data?.let {
                             updateUiState(
                                 UpdateRecipesListWithSort(
-                                    it,
-                                    _searchScreenUiState.value.currentSort
+                                    recipesList = it,
+                                    currentSort = _searchScreenUiState.value.currentSort
                                 )
                             )
                         }
-                        updateUiState(
-                            UpdateListDisplayMode(switchTo)
-                        )
+                        updateUiState(UpdateListDisplayMode(switchTo))
                     } else {
                         repoResult.message?.let { message ->
                             updateUiState(
-                                AddToSnackBarMessages(
-                                    listOf(SnackBarMessage(message = message))
-                                )
+                                AddToSnackBarMessages(listOf(SnackBarMessage(message = message)))
                             )
                         }
                     }
@@ -301,4 +299,20 @@ class SearchViewModel @Inject constructor(
             action.updateState(latest)
         }
     }
+
+    /**
+     * Returns the string of the [snackBarMessage]'s message or messageStringId, or null if none found.
+     */
+    fun getSnackBarMsg(localContext: Context, snackBarMessage: SnackBarMessage): String? {
+        return when {
+            snackBarMessage.message.isNotBlank() -> snackBarMessage.message
+            snackBarMessage.messageStringId != null -> localContext.getString(snackBarMessage.messageStringId)
+            else -> null
+        }
+    }
 }
+
+/**
+ * Filters a string to consist of a list of alphanumeric items separated by commas and optional spaces.
+ */
+fun filterSearchInput(newValue: String) = newValue.matches(Regex("^([a-zA-Z0-9-]+,?+\\s?)+\$"))

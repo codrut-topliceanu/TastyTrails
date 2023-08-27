@@ -41,6 +41,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -67,15 +68,19 @@ fun SearchScreen(
     val contextMenuVisible = rememberSaveable { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val isQueryValid = rememberSaveable { mutableStateOf(true) }
+    val localContext = LocalContext.current
 
     // Consumes the first snackBarMessage in list, recomposes when messages size changes.
     LaunchedEffect(key1 = viewState.snackBarMessages.size) {
         viewState.snackBarMessages.firstOrNull()?.let { snackBarMessage ->
-            snackbarHostState.showSnackbar(snackBarMessage.message)
+
+            searchViewModel.getSnackBarMsg(
+                localContext = localContext,
+                snackBarMessage = snackBarMessage
+            )?.let { snackbarHostState.showSnackbar(it) }
+
             searchViewModel.updateUiState(
-                RemoveFromSnackBarMessages(
-                    snackBarMessage
-                )
+                RemoveFromSnackBarMessages(snackBarMessage)
             )
         }
     }
@@ -533,7 +538,7 @@ fun SearchHeader(
         value = viewState.searchQuery,
         onValueChange = { newValue: String ->
             isQueryValid.value =
-                newValue.matches(Regex("^([a-zA-Z0-9-]+,?+\\s?)+\$"))
+                filterSearchInput(newValue)
 
             searchViewModel.updateUiState(
                 UpdateSearchQuery(
