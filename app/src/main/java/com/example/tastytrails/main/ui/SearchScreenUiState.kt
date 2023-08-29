@@ -31,7 +31,6 @@ enum class FilterOptions {
  * @param listDisplayMode used to switch between current search results, previously viewed recipes and favorites.
  * @param recipesList the list of currently displayed recipes.
  * @param currentlySelectedRecipe used to easily pass a [Recipe] to the [RecipeDetailScreen] for display.
- * @param snackBarMessages a list of messages to be displayed to the user, one by one.
  */
 data class SearchScreenUiState(
     val inProgress: Boolean = false,
@@ -42,7 +41,6 @@ data class SearchScreenUiState(
     val recipesList: List<Recipe> = listOf(),
     val resultsOffset: Int = 0,
     val currentlySelectedRecipe: Recipe? = null,
-    val snackBarMessages: List<SnackBarMessage> = listOf()
 )
 
 data class SnackBarMessage(
@@ -159,22 +157,6 @@ sealed class SearchScreenStateAction : StateAction<SearchScreenUiState> {
         SearchScreenStateAction() {
         override fun updateState(state: SearchScreenUiState): SearchScreenUiState =
             state.copy(currentlySelectedRecipe = currentlySelectedRecipe)
-    }
-
-    data class AddToSnackBarMessages(val snackBarMessages: List<SnackBarMessage>) :
-        SearchScreenStateAction() {
-        override fun updateState(state: SearchScreenUiState): SearchScreenUiState {
-            val snackBarMessages = state.snackBarMessages.plus(snackBarMessages)
-            return state.copy(snackBarMessages = snackBarMessages)
-        }
-    }
-
-    data class RemoveFromSnackBarMessages(val snackBarMessage: SnackBarMessage) :
-        SearchScreenStateAction() {
-        override fun updateState(state: SearchScreenUiState): SearchScreenUiState {
-            val snackBarMessages = state.snackBarMessages.minus(snackBarMessage)
-            return state.copy(snackBarMessages = snackBarMessages)
-        }
     }
 
 }

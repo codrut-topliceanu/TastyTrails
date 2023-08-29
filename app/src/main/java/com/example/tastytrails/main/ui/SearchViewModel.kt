@@ -13,7 +13,6 @@ import com.example.tastytrails.datastore.PreferencesKeys
 import com.example.tastytrails.datastore.ThemeSettings
 import com.example.tastytrails.main.domain.Recipe
 import com.example.tastytrails.main.domain.RecipeRepository
-import com.example.tastytrails.main.ui.SearchScreenStateAction.AddToSnackBarMessages
 import com.example.tastytrails.main.ui.SearchScreenStateAction.UpdateListDisplayMode
 import com.example.tastytrails.main.ui.SearchScreenStateAction.UpdateRecipesListWithSort
 import com.example.tastytrails.main.ui.SearchScreenStateAction.UpdateShowInProgress
@@ -21,8 +20,10 @@ import com.example.tastytrails.utils.RepoResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -38,6 +39,9 @@ class SearchViewModel @Inject constructor(
 
     lateinit var state: StateFlow<SearchScreenUiState>
     private val _searchScreenUiState = MutableStateFlow(SearchScreenUiState())
+
+    private val _snackbarMessages = MutableSharedFlow<SnackBarMessage>()
+    val snackbarMessages = _snackbarMessages.asSharedFlow()
 
     val themeSettingsFlow: Flow<ThemeSettings> = dataStore.data
         .catch {
@@ -67,16 +71,13 @@ class SearchViewModel @Inject constructor(
      * @param loadMore if the call should use [SearchScreenUiState.resultsOffset] to load more results
      */
     fun executeOnlineSearch(loadMore: Boolean = false) {
-        // No need to make a call if we don't have any search queries
-        if (state.value.searchQuery.isBlank()) {
-            updateUiState(
-                AddToSnackBarMessages(
-                    listOf(SnackBarMessage(messageStringId = R.string.empty_query_msg))
-                )
-            )
-            return
-        }
         viewModelScope.launch(Dispatchers.IO) {
+            // No need to make a call if we don't have any search queries
+            if (state.value.searchQuery.isBlank()) {
+                _snackbarMessages.emit(SnackBarMessage(messageStringId = R.string.empty_query_msg))
+                return@launch
+            }
+
             // Clear the previous search results, just in case
             previousSearchResults = listOf()
 
@@ -97,11 +98,7 @@ class SearchViewModel @Inject constructor(
                 is RepoResult.Error -> {
                     repoResult.message?.let {
                         // Print msg to user with error
-                        updateUiState(
-                            AddToSnackBarMessages(
-                                listOf(SnackBarMessage(message = repoResult.message))
-                            )
-                        )
+                        _snackbarMessages.emit(SnackBarMessage(messageStringId = R.string.empty_query_msg))
                     }
                 }
 
@@ -198,12 +195,7 @@ class SearchViewModel @Inject constructor(
                 }
             } else {
                 repoResult.message?.let { message ->
-                    updateUiState(
-                        AddToSnackBarMessages(
-                            listOf(SnackBarMessage(message = message))
-                        )
-                    )
-                }
+                    _snackbarMessages.emit(SnackBarMessage(message = message))                }
             }
         }
     }
@@ -245,11 +237,7 @@ class SearchViewModel @Inject constructor(
                         )
                     } else {
                         repoResult.message?.let { message ->
-                            updateUiState(
-                                AddToSnackBarMessages(
-                                    listOf(SnackBarMessage(message = message))
-                                )
-                            )
+                            _snackbarMessages.emit(SnackBarMessage(message = message))
                         }
                     }
                 }
@@ -268,10 +256,7 @@ class SearchViewModel @Inject constructor(
                         updateUiState(UpdateListDisplayMode(switchTo))
                     } else {
                         repoResult.message?.let { message ->
-                            updateUiState(
-                                AddToSnackBarMessages(listOf(SnackBarMessage(message = message)))
-                            )
-                        }
+                            _snackbarMessages.emit(SnackBarMessage(message = message))                        }
                     }
                 }
             }

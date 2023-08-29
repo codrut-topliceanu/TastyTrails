@@ -43,8 +43,7 @@ class SearchScreenUiStateTest {
                 currentSort = FilterOptions.A_Z,
                 listDisplayMode = ListDisplayMode.CURRENT_SEARCH,
                 recipesList = fakeRecipeList,
-                currentlySelectedRecipe = null,
-                snackBarMessages = listOf()
+                currentlySelectedRecipe = null
             )
         )
 
@@ -172,29 +171,5 @@ class SearchScreenUiStateTest {
         )
         assertThat(fakeSearchScreenUiState.value.currentlySelectedRecipe == fakeRecipe).isTrue()
     }
-
-    @Test
-    fun `WHEN AddToSnackBarMessages called THEN update fakeSearchScreenUiState`() {
-        updateSearchScreenUiState(
-            SearchScreenStateAction.AddToSnackBarMessages(listOf(SnackBarMessage(message = "test1")))
-        )
-        assertThat(fakeSearchScreenUiState.value.snackBarMessages.first().message == "test1").isTrue()
-    }
-
-    @Test
-    fun `WHEN RemoveFromSnackBarMessages called THEN update fakeSearchScreenUiState`() {
-        val fakeSnackMsg = SnackBarMessage(message = "test2")
-        fakeSearchScreenUiState.update { latest ->
-            latest.copy(snackBarMessages = listOf(fakeSnackMsg))
-        }
-
-        assertThat(fakeSearchScreenUiState.value.snackBarMessages.first().message == "test2").isTrue()
-
-        updateSearchScreenUiState(
-            SearchScreenStateAction.RemoveFromSnackBarMessages(fakeSnackMsg)
-        )
-        assertThat(fakeSearchScreenUiState.value.snackBarMessages.isEmpty()).isTrue()
-    }
-
 
 }

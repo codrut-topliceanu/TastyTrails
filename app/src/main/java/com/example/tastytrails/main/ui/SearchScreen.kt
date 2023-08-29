@@ -71,17 +71,12 @@ fun SearchScreen(
     val localContext = LocalContext.current
 
     // Consumes the first snackBarMessage in list, recomposes when messages size changes.
-    LaunchedEffect(key1 = viewState.snackBarMessages.size) {
-        viewState.snackBarMessages.firstOrNull()?.let { snackBarMessage ->
-
+    LaunchedEffect(key1 = true) {
+        searchViewModel.snackbarMessages.collect { snackbarMsg ->
             searchViewModel.getSnackBarMsg(
                 localContext = localContext,
-                snackBarMessage = snackBarMessage
+                snackBarMessage = snackbarMsg
             )?.let { snackbarHostState.showSnackbar(it) }
-
-            searchViewModel.updateUiState(
-                RemoveFromSnackBarMessages(snackBarMessage)
-            )
         }
     }
 
